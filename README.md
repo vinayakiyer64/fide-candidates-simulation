@@ -111,7 +111,7 @@ This fetches the current FIDE Top 100 from `ratings.fide.com`.
 
 | Scenario | Description | GS slots | WC slots | Circuit slots | Rating policy |
 |----------|-------------|----------|----------|---------------|---------------|
-| 1. Base Structure | Everyone participates, skip prob = 0 | 2 | 3 | 1 direct + 2 spillover | fills remainder |
+| 1. Base Structure | Everyone except Gukesh (plays but ineligible as reigning WC), skip prob = 0 | 2 | 3 | 1 direct + 2 spillover | fills remainder |
 | 2. Strategic Participation | Magnus excluded, Gukesh WC, Hikaru rating-only, skip prob 0.5 | 2 | 3 | 1 + 2 | fills remainder |
 | 3. Fewer GS/WC Slots | Scenario 2 but GS=1 and WC=2 (extra seats flow to rating) | 1 | 2 | 1 + 2 | fills remainder |
 | 4. Two Swiss Events | Scenario 2 with two independent Swiss events (1 slot each) around WC | 1 + 1 | 3 | 1 + 2 | fills remainder |
