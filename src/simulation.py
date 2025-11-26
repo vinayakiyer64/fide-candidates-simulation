@@ -1,125 +1,187 @@
-from typing import List, Dict, Optional, Set
+"""
+Monte Carlo simulation for FIDE qualification cycles.
+
+This module provides:
+- QualificationSimulator: Simulates a single season
+- run_monte_carlo: Runs many seasons and computes statistics
+"""
+
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 from collections import Counter
 import random
 import math
 
 from src.entities import Player, PlayerPool
-from src.config import QualificationConfig
-from src.tournaments.base import Tournament
-from src.tournaments.world_cup import WorldCupSimulator
-from src.tournaments.grand_swiss import GrandSwissSimulator
-from src.tournaments.circuit import FideCircuitSimulator
+from src.config import QualificationConfig, TournamentSlot
+from src.participation import ParticipationManager
+from src.tournament_registry import (
+    DEFAULT_TOURNAMENT_FACTORIES,
+    TournamentFactory,
+)
+
+
+@dataclass
+class SimulationStats:
+    """Aggregated statistics from many simulated seasons."""
+
+    mean_avg_elo_original: float
+    mean_avg_elo_live: float
+    var_avg_elo_live: float
+    qual_probs: Dict[int, float]
+    total_seasons: int
+
+    @property
+    def stddev_avg_elo_live(self) -> float:
+        return math.sqrt(self.var_avg_elo_live) if self.var_avg_elo_live > 0 else 0.0
 
 
 class QualificationSimulator:
     """
     Simulates a full qualification cycle based on the provided configuration.
+    
+    The simulation runs sequentially:
+    1. For each tournament slot (in order):
+       a. Determine participants (respecting modes and withdrawals)
+       b. Run tournament (updates Elo for participants)
+       c. Filter standings to eligible players
+       d. Allocate qualification spots
+       e. Mark qualifiers (affects future slots)
     """
 
-    def __init__(self, players: PlayerPool, config: QualificationConfig):
+    def __init__(
+        self,
+        players: PlayerPool,
+        config: QualificationConfig,
+        seed: Optional[int] = None,
+        tournament_factories: Optional[Dict[str, TournamentFactory]] = None,
+    ):
         """
         Initialize the simulator.
 
         Args:
-            players (PlayerPool): The pool of all players.
-            config (QualificationConfig): The qualification rules.
+            players: The pool of all players (will be modified during simulation)
+            config: The qualification rules
+            seed: Random seed for reproducible participation decisions
         """
         self.players = players
         self.config = config
-
-    def _create_tournament(self, tournament_type: str, **kwargs) -> Tournament:
-        """
-        Factory method to create tournament instances.
-        """
-        factory_map = {
-            "world_cup": WorldCupSimulator,
-            "grand_swiss": GrandSwissSimulator,
-            "fide_circuit": FideCircuitSimulator,
+        self.participation = ParticipationManager(players, config, seed=seed)
+        merged_factories: Dict[str, TournamentFactory] = {
+            **DEFAULT_TOURNAMENT_FACTORIES,
+            **config.tournament_factories,
         }
-        
-        if tournament_type not in factory_map:
-            raise ValueError(f"Unknown tournament type: {tournament_type}")
-            
-        return factory_map[tournament_type](self.players, **kwargs)
+        if tournament_factories:
+            merged_factories.update(tournament_factories)
+        self.tournament_factories = merged_factories
 
-    def _get_standings_for_slot(self, tournament_type: str, kwargs: dict) -> List[Player]:
+    def _create_tournament(self, tournament_type: str, participants: PlayerPool, **kwargs):
+        """Factory method to create tournament instances."""
+        factory = self.tournament_factories.get(tournament_type)
+        if factory is None:
+            raise ValueError(f"Unknown tournament type: {tournament_type}")
+        return factory(participants, **kwargs)
+
+    def _get_standings_for_slot(self, slot: TournamentSlot) -> List[Player]:
         """
         Get standings for a tournament slot.
         
-        For 'rating', returns players sorted by live Elo.
-        For other types, runs the tournament simulation.
+        For rating: Returns ALL players sorted by current Elo
+        For tournaments: Runs tournament with eligible participants
+        
+        Args:
+            slot: The tournament slot
+            
+        Returns:
+            Ordered list of players (best first)
         """
-        if tournament_type == "rating":
-            # Return all players sorted by current (live) Elo
+        if slot.tournament_type == "rating":
+            # Rating uses ALL players sorted by current (live) Elo
+            # Eligibility filtering happens at allocation time
             return sorted(self.players, key=lambda p: p.elo, reverse=True)
-        else:
-            tournament = self._create_tournament(tournament_type, **kwargs)
-            return tournament.get_standings(top_n=20)
+        
+        # Get participants for this tournament
+        participants = self.participation.get_participants(slot)
+        
+        if len(participants) < 2:
+            return []
+        
+        tournament = self._create_tournament(
+            slot.tournament_type, 
+            participants, 
+            **slot.kwargs
+        )
+        return tournament.get_standings(top_n=20)
 
     def simulate_one_season(self) -> List[Player]:
         """
-        Simulate all qualification paths and return list of unique qualifiers.
+        Simulate the full qualification cycle sequentially.
+        
+        For each slot:
+        1. Determine participants (respecting modes and withdrawals)
+        2. Run tournament (updates Elo for participants)
+        3. Filter standings to eligible players only
+        4. Allocate spots (strategy sees all qualified for spillover logic)
+        5. Mark qualifiers (affects future slots)
         
         Returns:
-            List[Player]: The final list of Candidates.
+            List of qualified players (up to target_candidates)
         """
-        # 1. Collection Phase: Run all tournaments and collect standings
-        standings_map: Dict[str, List[Player]] = {}
+        final_qualifiers: List[Player] = []
         
         for slot in self.config.slots:
-            # Only run tournament once per type (cache results)
-            if slot.tournament_type not in standings_map:
-                standings_map[slot.tournament_type] = self._get_standings_for_slot(
-                    slot.tournament_type, slot.kwargs
-                )
-
-        # 2. Allocation Phase: Apply each slot's strategy in order
-        final_qualifiers: List[Player] = []
-        qualified_ids: Set[int] = set()
-
-        for slot in self.config.slots:
-            standings = standings_map.get(slot.tournament_type, [])
-            
-            # Apply the slot's allocation strategy
-            new_qualifiers = slot.strategy.allocate(
-                standings=standings,
-                max_spots=slot.max_spots,
-                already_qualified=qualified_ids
-            )
-            
-            # Add to final list
-            for player in new_qualifiers:
-                if player.id not in qualified_ids:
-                    final_qualifiers.append(player)
-                    qualified_ids.add(player.id)
-                    
-            # Early exit if we've reached target
             if len(final_qualifiers) >= self.config.target_candidates:
                 break
-
+            
+            # 1-2. Run tournament with eligible participants
+            standings = self._get_standings_for_slot(slot)
+            
+            if not standings:
+                continue
+            
+            # 3. Filter to eligible players only
+            eligible_standings = self.participation.get_eligible_standings(standings)
+            
+            if not eligible_standings:
+                continue
+            
+            # 4. Allocate (strategy sees all qualified for spillover logic)
+            new_qualifiers = slot.strategy.allocate(
+                standings=eligible_standings,
+                max_spots=slot.max_spots,
+                already_qualified=self.participation.qualified_ids
+            )
+            
+            # 5. Mark as qualified
+            new_ids = {p.id for p in new_qualifiers}
+            self.participation.mark_qualified(new_ids)
+            final_qualifiers.extend(new_qualifiers)
+        
         return final_qualifiers[:self.config.target_candidates]
 
 
-def run_monte_carlo(players: PlayerPool,
-                    config: QualificationConfig,
-                    num_seasons: int = 1000,
-                    seed: Optional[int] = None) -> Dict:
+def run_monte_carlo(
+    players: PlayerPool,
+    config: QualificationConfig,
+    num_seasons: int = 1000,
+    seed: Optional[int] = None,
+    tournament_factories: Optional[Dict[str, TournamentFactory]] = None,
+) -> SimulationStats:
     """
     Run many simulated seasons and compute fairness metrics.
 
     Args:
-        players (PlayerPool): List of players.
-        config (QualificationConfig): Simulation configuration.
-        num_seasons (int): Number of iterations.
-        seed (int, optional): Random seed.
+        players: List of players (original, will be cloned for each season)
+        config: Simulation configuration
+        num_seasons: Number of iterations
+        seed: Random seed for reproducibility
 
     Returns:
-        Dict: Statistics including:
-            - mean_avg_elo_original: Mean Elo of qualifiers based on their original (pre-season) ratings
-            - mean_avg_elo_live: Mean Elo of qualifiers based on their live (post-season) ratings
-            - var_avg_elo_live: Variance of live Elo averages
+        Dict containing:
+            - mean_avg_elo_original: Mean Elo of qualifiers based on pre-season ratings
+            - mean_avg_elo_live: Mean Elo of qualifiers based on post-season ratings
+            - var_avg_elo_live: Variance of average live Elo across seasons
             - qual_probs: Qualification probability per player
-            - corr_rank_prob: Correlation between initial rank and qualification probability
             - total_seasons: Number of valid seasons simulated
     """
     if seed is not None:
@@ -135,13 +197,16 @@ def run_monte_carlo(players: PlayerPool,
     
     # Pre-compute original stats for fast lookup
     original_map = {p.id: p for p in players}
-    original_ranks = {p.id: p.initial_rank for p in players}
+    original_elos = {p.id: p.elo for p in players}
 
-    for _ in range(num_seasons):
+    for season_idx in range(num_seasons):
         # Deep copy for isolation - each season starts fresh
         season_players = [p.clone() for p in players]
         
-        qual_sim = QualificationSimulator(season_players, config)
+        # Use season_idx as part of seed for reproducible participation decisions
+        participation_seed = (seed + season_idx) if seed is not None else None
+        
+        qual_sim = QualificationSimulator(season_players, config, seed=participation_seed)
         quals = qual_sim.simulate_one_season()
         
         if len(quals) < 1:
@@ -150,11 +215,10 @@ def run_monte_carlo(players: PlayerPool,
         total_valid_seasons += 1
         
         # Metrics based on ORIGINAL Elo (true strength, pre-season)
-        avg_elo_original = sum(original_map[p.id].elo for p in quals) / len(quals)
+        avg_elo_original = sum(original_elos[p.id] for p in quals) / len(quals)
         original_elo_sums += avg_elo_original
         
         # Metrics based on LIVE Elo (updated through season)
-        # quals contains Player objects from season_players with updated Elos
         avg_elo_live = sum(p.elo for p in quals) / len(quals)
         live_elo_sums += avg_elo_live
         live_elo_sums_sq += avg_elo_live ** 2
@@ -175,26 +239,10 @@ def run_monte_carlo(players: PlayerPool,
     mean_avg_elo_live = live_elo_sums / total_valid_seasons
     var_avg_elo_live = (live_elo_sums_sq / total_valid_seasons) - mean_avg_elo_live ** 2
 
-    # Correlation: Initial Rank vs Qualification Prob
-    xs = [original_ranks[p.id] for p in players]
-    ys = [qual_probs.get(p.id, 0.0) for p in players]
-    
-    if len(xs) > 1:
-        mean_x = sum(xs) / len(xs)
-        mean_y = sum(ys) / len(ys)
-        cov = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys)) / len(xs)
-        var_x = sum((x - mean_x) ** 2 for x in xs) / len(xs)
-        var_y = sum((y - mean_y) ** 2 for y in ys) / len(ys)
-        
-        corr = cov / math.sqrt(var_x * var_y) if var_x > 0 and var_y > 0 else 0.0
-    else:
-        corr = 0.0
-
-    return {
-        "mean_avg_elo_original": mean_avg_elo_original,
-        "mean_avg_elo_live": mean_avg_elo_live,
-        "var_avg_elo_live": var_avg_elo_live,
-        "qual_probs": qual_probs,
-        "corr_rank_prob": corr,
-        "total_seasons": total_valid_seasons,
-    }
+    return SimulationStats(
+        mean_avg_elo_original=mean_avg_elo_original,
+        mean_avg_elo_live=mean_avg_elo_live,
+        var_avg_elo_live=var_avg_elo_live,
+        qual_probs=qual_probs,
+        total_seasons=total_valid_seasons,
+    )

@@ -4,13 +4,20 @@ Monte Carlo simulation of the FIDE World Championship qualification cycle to eva
 
 ## Overview
 
-The simulation models four qualification paths to the Candidates Tournament:
-- **Grand Swiss** (2 spots) - Swiss-system tournament
-- **World Cup** (3 spots) - Knockout tournament  
-- **FIDE Circuit** (2-3 spots) - Series of elite events with points
-- **Rating** (1+ spots) - Highest-rated non-qualified players
+The simulator plays out the official qualification cycle **sequentially**:
 
-Each qualification path has specific allocation rules (e.g., strict top-N, spillover for duplicates). The simulation runs 500+ seasons to measure how often the "true" top 8 players qualify under different systems.
+1. Each configured tournament runs with the players who actually participate.
+2. Elo is updated after every game, so later events use “live” ratings.
+3. Allocation rules (strict top-N, FIDE Circuit spillover, rating fallback) are applied immediately.
+4. Already-qualified players are removed from future events (or can skip with a probability).
+
+The four qualification paths are:
+- **Grand Swiss** – Swiss-system event (2 spots per slot)
+- **World Cup** – Knockout event (3 spots per slot)
+- **FIDE Circuit** – Series of events with spillover logic (base 2, +1 if duplicates)
+- **Rating** – Highest-rated non-qualified players (fills the remainder)
+
+Each season is simulated hundreds of times to measure fairness metrics such as the average Elo of qualifiers and the percentage of “true” top-8 players who qualify.
 
 ## Project Structure
 
@@ -22,8 +29,11 @@ fide-candidates-simulation/
 │   ├── entities.py               # Player dataclass
 │   ├── game_logic.py             # Elo expected score, game simulation, rating updates
 │   ├── utils.py                  # Weighted sampling, player pool augmentation
-│   ├── config.py                 # QualificationConfig, TournamentSlot
-│   ├── simulation.py             # QualificationSimulator, run_monte_carlo
+│   ├── config.py                 # QualificationConfig, TournamentSlot, PlayerConfig
+│   ├── participation.py          # ParticipationManager (eligibility, withdrawals)
+│   ├── scenario_builder.py       # Fluent helpers for assembling scenarios
+│   ├── simulation.py             # Sequential QualificationSimulator + run_monte_carlo
+│   ├── tournament_registry.py    # Default tournament factory mapping
 │   ├── tournaments/
 │   │   ├── base.py               # Abstract Tournament class
 │   │   ├── world_cup.py          # Knockout format (128 players)
@@ -63,22 +73,20 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-Output:
+Sample output (truncated):
+
 ```
 Loaded 100 real players. Augmenting pool...
-Total player pool size after augmentation: 328
+Total player pool size after augmentation: 334
 Top player: Carlsen, Magnus (2839.0)
 
-Running Simulations (500 seasons each)...
----------------------------------------------------------------------------
-Scenario                            | Avg Elo    | Top 8 Qual%  | Corr(Rank,Prob)
----------------------------------------------------------------------------
-Current System                      | 2747.1      | 44.7%        | -0.455
-Pure Rating (Reference)             | 2785.0      | 100.0%        | -0.267
-More Rating Spots (-2 WC)           | 2761.9      | 59.8%        | -0.365
-More Circuit Spots (-2 WC)          | 2759.8      | 57.9%        | -0.373
-Grand Slam (No WC)                  | 2750.8      | 49.2%        | -0.409
----------------------------------------------------------------------------
+Running Simulations (1000 seasons each)...
+Scenario                                 | Orig Elo | Live Elo | StdDev(Elo) | Top8 Qual%
+------------------------------------------------------------------------------------------
+Current System                           | 2755.8   | 2769.8   | 13.7        | 48.0%
+Pure Rating (Reference)                  | 2786.2   | 2786.2   | 0.0         | 100.0%
+More Rating Spots (-2 WC)                | 2766.8   | 2777.4   | 11.4        | 62.1%
+...
 ```
 
 ### Update Player Data
@@ -99,6 +107,23 @@ This fetches the current FIDE Top 100 from `ratings.fide.com`.
 | More Circuit (-2 WC) | 2 | 1 | 2-4 | 1+ |
 | Grand Slam (No WC) | 4 | - | 2-3 | 1+ |
 
+## Participation Modes
+
+Player behavior is configured via `PlayerConfig`:
+
+| Mode | Plays Tournaments? | Eligible for Spots? | Example Use |
+|------|-------------------|---------------------|-------------|
+| `FULL` (default) | ✅ Yes | ✅ Yes | Most players |
+| `PLAYS_NOT_ELIGIBLE` | ✅ Yes | ❌ No | Reigning World Champion (plays to keep form, already qualified) |
+| `EXCLUDED` | ❌ No | ❌ No | Retired or withdrawn players |
+| `RATING_ONLY` | ❌ No | ✅ Rating fallback only | High-rated players preserving Elo (e.g., Nakamura) |
+
+Additional controls:
+- `blocked_tournaments`: Blacklist specific tournaments (player will skip only those events).
+- `qualified_skip_prob` (per TournamentSlot): already-qualified players skip later events with this probability to model strategic rest.
+
+All participation/eligibility logic lives in `ParticipationManager`, keeping responsibilities isolated (SRP) while letting scenarios stay declarative.
+
 ## Allocation Rules
 
 The simulation implements FIDE's actual qualification rules:
@@ -113,9 +138,10 @@ Priority order: Grand Swiss → World Cup → Circuit → Rating
 
 ## Key Metrics
 
-- **Avg Elo**: Mean Elo of the 8 qualifiers (higher = stronger field)
-- **Top 8 Qual%**: How often the "true" top 8 by rating actually qualify
-- **Corr(Rank, Prob)**: Correlation between initial rank and qualification probability (more negative = more meritocratic)
+- **Orig Elo**: Average pre-season Elo of the qualifiers (true strength baseline)
+- **Live Elo**: Average post-season Elo after all games (who actually performed)
+- **StdDev(Elo)**: Standard deviation of the average live Elo across seasons (volatility of the format)
+- **Top 8 Qual%**: How often the “true” top 8 by Elo qualified
 
 ## Key Findings
 
