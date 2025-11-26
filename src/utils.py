@@ -100,15 +100,9 @@ def augment_player_pool(players: PlayerPool, target_min_elo: float = 2400.0) -> 
     # Estimate how many players we need.
     # FIDE ratings follow roughly a normal distribution or logistic tail.
     # For top players, the density increases as rating drops.
-    # Simple linear approximation for simulation purposes:
-    # Assume density increases linearly? Or just fill a fixed number?
-    
-    # Let's assume we want a pool large enough for a 128-player tournament
-    # plus some extras to make the selection interesting.
-    # 200-300 players total is usually enough for "Top Level" sim context.
-    
-    # Let's create a simple ramp down to 2400.
-    # Step size: e.g. 1 point per player?
+    # Simple linear approximation for simulation purposes:    
+    # Create a simple ramp down to 2400.
+    # Step size: 1 point per player.
     # 2640 - 2400 = 240 points. At 1 pt/player -> 240 extra players.
     
     new_players = list(sorted_players)

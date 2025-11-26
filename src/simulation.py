@@ -114,14 +114,23 @@ def run_monte_carlo(players: PlayerPool,
         seed (int, optional): Random seed.
 
     Returns:
-        Dict: Statistics including mean average Elo of qualifiers and fairness metrics.
+        Dict: Statistics including:
+            - mean_avg_elo_original: Mean Elo of qualifiers based on their original (pre-season) ratings
+            - mean_avg_elo_live: Mean Elo of qualifiers based on their live (post-season) ratings
+            - var_avg_elo_live: Variance of live Elo averages
+            - qual_probs: Qualification probability per player
+            - corr_rank_prob: Correlation between initial rank and qualification probability
+            - total_seasons: Number of valid seasons simulated
     """
     if seed is not None:
         random.seed(seed)
 
     qual_counts = Counter()
-    elo_sums = 0.0
-    elo_sums_sq = 0.0
+    
+    # Track both original and live Elo metrics
+    original_elo_sums = 0.0
+    live_elo_sums = 0.0
+    live_elo_sums_sq = 0.0
     total_valid_seasons = 0
     
     # Pre-compute original stats for fast lookup
@@ -129,7 +138,7 @@ def run_monte_carlo(players: PlayerPool,
     original_ranks = {p.id: p.initial_rank for p in players}
 
     for _ in range(num_seasons):
-        # Deep copy for isolation
+        # Deep copy for isolation - each season starts fresh
         season_players = [p.clone() for p in players]
         
         qual_sim = QualificationSimulator(season_players, config)
@@ -140,10 +149,15 @@ def run_monte_carlo(players: PlayerPool,
         
         total_valid_seasons += 1
         
-        # Metrics based on ORIGINAL stats (True Strength)
-        avg_elo = sum(original_map[p.id].elo for p in quals) / len(quals)
-        elo_sums += avg_elo
-        elo_sums_sq += avg_elo ** 2
+        # Metrics based on ORIGINAL Elo (true strength, pre-season)
+        avg_elo_original = sum(original_map[p.id].elo for p in quals) / len(quals)
+        original_elo_sums += avg_elo_original
+        
+        # Metrics based on LIVE Elo (updated through season)
+        # quals contains Player objects from season_players with updated Elos
+        avg_elo_live = sum(p.elo for p in quals) / len(quals)
+        live_elo_sums += avg_elo_live
+        live_elo_sums_sq += avg_elo_live ** 2
         
         for p in quals:
             qual_counts[p.id] += 1
@@ -157,8 +171,9 @@ def run_monte_carlo(players: PlayerPool,
         for pid, count in qual_counts.items()
     }
 
-    mean_avg_elo = elo_sums / total_valid_seasons
-    var_avg_elo = (elo_sums_sq / total_valid_seasons) - mean_avg_elo ** 2
+    mean_avg_elo_original = original_elo_sums / total_valid_seasons
+    mean_avg_elo_live = live_elo_sums / total_valid_seasons
+    var_avg_elo_live = (live_elo_sums_sq / total_valid_seasons) - mean_avg_elo_live ** 2
 
     # Correlation: Initial Rank vs Qualification Prob
     xs = [original_ranks[p.id] for p in players]
@@ -176,8 +191,9 @@ def run_monte_carlo(players: PlayerPool,
         corr = 0.0
 
     return {
-        "mean_avg_elo": mean_avg_elo,
-        "var_avg_elo": var_avg_elo,
+        "mean_avg_elo_original": mean_avg_elo_original,
+        "mean_avg_elo_live": mean_avg_elo_live,
+        "var_avg_elo_live": var_avg_elo_live,
         "qual_probs": qual_probs,
         "corr_rank_prob": corr,
         "total_seasons": total_valid_seasons,
