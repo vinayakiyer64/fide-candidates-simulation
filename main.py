@@ -108,94 +108,123 @@ def main():
     # SCENARIO DEFINITIONS
     # =========================================================================
     
-    base_builder = ScenarioBuilder(base_slots())
-    scenarios = []
-    
-    # 1. Current System (baseline)
-    scenarios.append(("Current System", base_builder.build()))
-    
-    # 2. Pure Rating (reference - maximum meritocracy)
-    scenarios.append((
-        "Pure Rating (Reference)",
-        ScenarioBuilder(
-            [
-                TournamentSlot(
-                    "rating",
-                    max_spots=8,
-                    strategy=RatingAllocation(guaranteed_spots=8),
-                )
-            ]
-        ).build()
-    ))
-    
-    # 3. Current System with Gukesh as World Champion (plays but can't qualify)
-    scenarios.append((
-        "Current + Gukesh (Champion)",
-        base_builder.with_player_configs(
-            {
-                GUKESH_ID: PlayerConfig(mode=ParticipationMode.PLAYS_NOT_ELIGIBLE),
-            }
-        ).build()
-    ))
-    
-    # 4. Current System with Magnus excluded (retired from cycle)
-    scenarios.append((
-        "Current + Magnus Excluded",
-        base_builder.with_player_configs(
-            {
-                MAGNUS_ID: PlayerConfig(mode=ParticipationMode.EXCLUDED),
-            }
-        ).build()
-    ))
-    
-    # 5. Current System with Nakamura rating-only (preserves rating)
-    scenarios.append((
-        "Current + Nakamura Rating-Only",
-        base_builder.with_player_configs(
-            {
-                NAKAMURA_ID: PlayerConfig(mode=ParticipationMode.RATING_ONLY),
-            }
-        ).build()
-    ))
-    
-    # 6. Current System with strategic withdrawals (75% skip after qualifying)
-    scenarios.append((
-        "Current + 75% Skip After Qual",
-        ScenarioBuilder(base_slots(qualified_skip_prob=0.75)).build()
-    ))
-    
-    # 7. Realistic scenario: Gukesh champion, Magnus excluded, strategic play
-    scenarios.append((
-        "Realistic (Gukesh WC, Magnus Out)",
-        ScenarioBuilder(
-            base_slots(qualified_skip_prob=0.75)
-        )
-        .with_player_configs(
-            {
-                GUKESH_ID: PlayerConfig(mode=ParticipationMode.PLAYS_NOT_ELIGIBLE),
-                MAGNUS_ID: PlayerConfig(mode=ParticipationMode.EXCLUDED),
-            }
-        )
-        .build()
-    ))
-    
-    # 8. More Rating Spots (reduce WC from 3 to 1)
-    more_rating_slots = [
-        TournamentSlot("grand_swiss", max_spots=2, strategy=StrictTopNAllocation()),
-        TournamentSlot("world_cup", max_spots=1, strategy=StrictTopNAllocation()),
+    scenarios: list[tuple[str, QualificationConfig]] = []
+
+    # Scenario 1: Base tournament order with Gukesh ineligible (World Champion)
+    baseline_builder = ScenarioBuilder(base_slots()).with_player_configs(
+        {GUKESH_ID: PlayerConfig(mode=ParticipationMode.PLAYS_NOT_ELIGIBLE)}
+    )
+    scenarios.append(("Scenario 1: Base Structure", baseline_builder.build()))
+
+    strategic_configs = {
+        MAGNUS_ID: PlayerConfig(mode=ParticipationMode.EXCLUDED),
+        GUKESH_ID: PlayerConfig(mode=ParticipationMode.PLAYS_NOT_ELIGIBLE),
+        NAKAMURA_ID: PlayerConfig(mode=ParticipationMode.RATING_ONLY),
+    }
+
+    # Scenario 2: Strategic participation with skip probability 0.5
+    scenario2_builder = ScenarioBuilder(base_slots(qualified_skip_prob=0.5)).with_player_configs(
+        strategic_configs
+    )
+    scenarios.append(("Scenario 2: Strategic Participation", scenario2_builder.build()))
+
+    # Scenario 3: Scenario 2 but with fewer GS/WC spots (extra spill to rating)
+    scenario3_slots = [
         TournamentSlot(
             "fide_circuit",
-            max_spots=3,
-            strategy=CircuitAllocation(base_spots=2, max_spots=3),
+            max_spots=1,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "grand_swiss",
+            max_spots=1,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "world_cup",
+            max_spots=2,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "fide_circuit",
+            max_spots=2,
+            strategy=CircuitAllocation(base_spots=1, max_spots=2),
+            qualified_skip_prob=0.5,
         ),
         TournamentSlot("rating", max_spots=8, strategy=RatingAllocation(guaranteed_spots=1)),
     ]
     scenarios.append(
         (
-            "More Rating Spots (-2 WC)",
-            base_builder.with_slots(more_rating_slots).build(),
+            "Scenario 3: Fewer GS/WC Slots",
+            ScenarioBuilder(scenario3_slots).with_player_configs(strategic_configs).build(),
         )
     )
+
+    # Scenario 4: Scenario 2 but with two independent Swiss events (before/after WC)
+    scenario4_slots = [
+        TournamentSlot(
+            "fide_circuit",
+            max_spots=1,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "grand_swiss",
+            max_spots=1,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "world_cup",
+            max_spots=3,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "grand_swiss",
+            max_spots=1,
+            strategy=StrictTopNAllocation(),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot(
+            "fide_circuit",
+            max_spots=2,
+            strategy=CircuitAllocation(base_spots=1, max_spots=2),
+            qualified_skip_prob=0.5,
+        ),
+        TournamentSlot("rating", max_spots=8, strategy=RatingAllocation(guaranteed_spots=1)),
+    ]
+    scenarios.append(
+        (
+            "Scenario 4: Two Swiss Events",
+            ScenarioBuilder(scenario4_slots).with_player_configs(strategic_configs).build(),
+        )
+    )
+
+    # Scenario 5: Scenario 4 but only Gukesh is WC (Magnus/Hikaru play)
+    scenarios.append(
+        (
+            "Scenario 5: Swiss Focus (Gukesh WC)",
+            ScenarioBuilder(scenario4_slots)
+            .with_player_configs({GUKESH_ID: PlayerConfig(mode=ParticipationMode.PLAYS_NOT_ELIGIBLE)})
+            .build(),
+        )
+    )
+
+    # Scenario 6: Ratings only (top 8 by Elo)
+    rating_only_builder = ScenarioBuilder(
+        [
+            TournamentSlot(
+                "rating",
+                max_spots=8,
+                strategy=RatingAllocation(guaranteed_spots=8),
+            )
+        ]
+    )
+    scenarios.append(("Scenario 6: Pure Rating", rating_only_builder.build()))
 
     # =========================================================================
     # RUN SIMULATIONS
@@ -210,8 +239,11 @@ def main():
     # Top 8 players by Elo (Target set for fairness metric)
     top_8_ids = {p.id for p in sorted(players, key=lambda x: x.elo, reverse=True)[:8]}
     
+    results: dict[str, SimulationStats] = {}
+
     for name, cfg in scenarios:
         stats = run_monte_carlo(players, cfg, num_seasons=1000, seed=42)
+        results[name] = stats
         
         if stats.total_seasons == 0:
             print(f"{name:<40} | Error: No qualifiers produced.")
@@ -236,10 +268,10 @@ def main():
     print("Top 15 Qualification Probabilities (Current System)")
     print("=" * 100)
     
-    # Run current system once more for detailed stats
-    stats = run_monte_carlo(players, base_builder.build(), num_seasons=1000, seed=42)
+    baseline_name = "Scenario 1: Base Structure"
+    stats = results.get(baseline_name)
 
-    if stats.total_seasons > 0:
+    if stats and stats.total_seasons > 0:
         # Sort by qualification probability
         sorted_probs = sorted(stats.qual_probs.items(), key=lambda x: x[1], reverse=True)
         

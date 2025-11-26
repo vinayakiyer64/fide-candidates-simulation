@@ -82,11 +82,13 @@ Top player: Carlsen, Magnus (2839.0)
 
 Running Simulations (1000 seasons each)...
 Scenario                                 | Orig Elo | Live Elo | StdDev(Elo) | Top8 Qual%
-------------------------------------------------------------------------------------------
-Current System                           | 2755.8   | 2769.8   | 13.7        | 48.0%
-Pure Rating (Reference)                  | 2786.2   | 2786.2   | 0.0         | 100.0%
-More Rating Spots (-2 WC)                | 2766.8   | 2777.4   | 11.4        | 62.1%
-...
+-------------------------------------------------------------------------------------------
+Scenario 1: Base Structure               | 2755.3   | 2769.5   | 14.0        | 50.0%
+Scenario 2: Strategic Participation      | 2740.5   | 2755.9   | 13.3        | 38.5%
+Scenario 3: Fewer GS/WC Slots            | 2753.1   | 2767.4   | 10.9        | 53.4%
+Scenario 4: Two Swiss Events             | 2741.4   | 2757.4   | 12.9        | 39.7%
+Scenario 5: Swiss Focus (Gukesh WC)      | 2755.6   | 2770.8   | 13.7        | 49.5%
+Scenario 6: Pure Rating                  | 2786.2   | 2786.2   | 0.0         | 100.0%
 ```
 
 ### Update Player Data
@@ -97,15 +99,24 @@ python3 scripts/scrape_fide.py
 
 This fetches the current FIDE Top 100 from `ratings.fide.com`.
 
+## Parameter Choices & Assumptions
+
+- **Tournament order:** `base_slots()` schedules a small “direct” circuit slot (strict top‑N), then the Grand Swiss (2 spots), World Cup (3 spots), a larger circuit slot with spillover logic (base 1 + bonus spot if GS/WC duplicates), and finally the rating fallback. Scenarios tweak this list as needed.
+- **Participant sampling:** Each event draws a weighted sample of the augmented player pool (weights grow with Elo) to mimic invite lists that favor top players while still allowing room for lower‑rated entrants.
+- **Elo updates:** Every game/match calls `update_ratings`, so later events see “live” ratings that incorporate performance to date.
+- **Skip probability:** Each `TournamentSlot` can assign `qualified_skip_prob`. A value of `0.5`, for example, causes already-qualified players to skip the next event 50 % of the time, modeling strategic rest.
+- **Player modes:** `PlayerConfig` drives whether a player plays, is eligible, or is rating-only. Use `blocked_tournaments` for fine-grained exclusions.
+
 ## Scenarios
 
-| Scenario | Grand Swiss | World Cup | Circuit | Rating |
-|----------|-------------|-----------|---------|--------|
-| Current System | 2 | 3 | 2-3 | 1+ |
-| Pure Rating | - | - | - | 8 |
-| More Rating (-2 WC) | 2 | 1 | 2-3 | 1+ |
-| More Circuit (-2 WC) | 2 | 1 | 2-4 | 1+ |
-| Grand Slam (No WC) | 4 | - | 2-3 | 1+ |
+| Scenario | Description | GS slots | WC slots | Circuit slots | Rating policy |
+|----------|-------------|----------|----------|---------------|---------------|
+| 1. Base Structure | Everyone participates, skip prob = 0 | 2 | 3 | 1 direct + 2 spillover | fills remainder |
+| 2. Strategic Participation | Magnus excluded, Gukesh WC, Hikaru rating-only, skip prob 0.5 | 2 | 3 | 1 + 2 | fills remainder |
+| 3. Fewer GS/WC Slots | Scenario 2 but GS=1 and WC=2 (extra seats flow to rating) | 1 | 2 | 1 + 2 | fills remainder |
+| 4. Two Swiss Events | Scenario 2 with two independent Swiss events (1 slot each) around WC | 1 + 1 | 3 | 1 + 2 | fills remainder |
+| 5. Swiss Focus (Gukesh WC) | Scenario 4 but only Gukesh is WC; Magnus & Hikaru play | 1 + 1 | 3 | 1 + 2 | fills remainder |
+| 6. Pure Rating | No tournaments – top 8 by current Elo | – | – | – | 8 rating spots |
 
 ## Participation Modes
 
@@ -119,10 +130,11 @@ Player behavior is configured via `PlayerConfig`:
 | `RATING_ONLY` | ❌ No | ✅ Rating fallback only | High-rated players preserving Elo (e.g., Nakamura) |
 
 Additional controls:
-- `blocked_tournaments`: Blacklist specific tournaments (player will skip only those events).
-- `qualified_skip_prob` (per TournamentSlot): already-qualified players skip later events with this probability to model strategic rest.
 
-All participation/eligibility logic lives in `ParticipationManager`, keeping responsibilities isolated (SRP) while letting scenarios stay declarative.
+- `blocked_tournaments`: blacklist specific events at the player level (e.g., “never plays World Cup”).
+- `qualified_skip_prob` (per `TournamentSlot`): once qualified, a player skips later events with this probability (models strategic rest).
+
+All participation/eligibility logic lives in `src/participation.py`, keeping behavior isolated while scenarios remain declarative.
 
 ## Allocation Rules
 
@@ -145,37 +157,50 @@ Priority order: Grand Swiss → World Cup → Circuit → Rating
 
 ## Key Findings
 
-- **World Cup volatility**: The knockout format introduces significant randomness. Reducing WC spots increases the probability that the strongest players qualify.
-- **Rating is most meritocratic**: Pure rating selection guarantees 100% of the true top 8 qualify.
-- **Current system trade-off**: Balances competitive excitement (tournaments) with meritocracy (rating spots).
+- **Participation drives most variance.** Scenario 2 (Magnus out, Hikaru rating-only, skip = 0.5) drops the top‑8 hit rate below 40 % even though the event structure is unchanged. When those players return (Scenario 5), metrics rebound to the base case.
+- **Structural tweaks still matter.** Reclaiming GS/WC seats for the rating list (Scenario 3) raises the top‑8 hit rate from ~48 % to ~53 % and reduces Elo volatility (StdDev ~11 vs ~13 in the baseline).
+- **Extra Swiss events alone don’t fix strategic behavior.** Scenario 4 still underperforms because the strongest players are absent; format changes can only do so much if participation is low.
+- **Pure rating (Scenario 6)** guarantees the strongest possible field (Orig/Live Elo ~2786, StdDev 0) but removes competitive variance entirely.
+
+Overall, the model suggests that randomness in Candidate qualification is more sensitive to who plays (or skips) than to the exact arrangement of GS/WC/Circuit slots.
 
 ## Extending the Simulation
 
 ### Add a New Tournament Type
 
-1. Create a new class in `src/tournaments/` inheriting from `Tournament`
-2. Implement `get_standings(top_n: int) -> List[Player]`
-3. Register it in `QualificationSimulator._create_tournament()`
+1. Implement a subclass of `src.tournaments.base.Tournament` (e.g., `MyOpenEvent`) with a `get_standings(top_n: int)` method that mutates Elo as needed.
+2. Register it in `src/tournament_registry.DEFAULT_TOURNAMENT_FACTORIES` so scenarios can reference it by string (e.g., `"my_open"`).
+3. Optionally provide a custom `tournament_factories` dict via `QualificationConfig` if a scenario needs a one-off variant.
 
 ### Add a New Allocation Strategy
 
-1. Create a new class in `src/allocation/` inheriting from `AllocationStrategy`
-2. Implement `allocate(standings, max_spots, already_qualified) -> List[Player]`
-3. Use it in a `TournamentSlot` in `main.py`
+1. Create a class in `src/allocation/` inheriting from `AllocationStrategy`.
+2. Implement `allocate(self, standings, max_spots, already_qualified) -> list[Player]`.
+3. Use it inside a `TournamentSlot(strategy=YourStrategy(...))` when building scenarios.
 
 ### Define a New Scenario
 
+Use `ScenarioBuilder` to keep configurations modular:
+
 ```python
-config_custom = QualificationConfig(
-    target_candidates=8,
-    slots=[
-        TournamentSlot("grand_swiss", max_spots=3, strategy=StrictTopNAllocation()),
-        TournamentSlot("world_cup", max_spots=2, strategy=StrictTopNAllocation()),
-        TournamentSlot("fide_circuit", max_spots=2, strategy=CircuitAllocation(base_spots=2, max_spots=2)),
-        TournamentSlot("rating", max_spots=8, strategy=RatingAllocation(guaranteed_spots=1)),
-    ]
+from src.scenario_builder import ScenarioBuilder
+from src.config import PlayerConfig, ParticipationMode
+from src.allocation.strict_top_n import StrictTopNAllocation
+
+custom_slots = [
+    TournamentSlot("grand_swiss", max_spots=1, strategy=StrictTopNAllocation(), qualified_skip_prob=0.2),
+    TournamentSlot("world_cup", max_spots=2, strategy=StrictTopNAllocation(), qualified_skip_prob=0.2),
+    TournamentSlot("rating", max_spots=8, strategy=RatingAllocation(guaranteed_spots=1)),
+]
+
+custom_config = (
+    ScenarioBuilder(custom_slots)
+    .with_player_configs({123456: PlayerConfig(mode=ParticipationMode.RATING_ONLY)})
+    .build()
 )
 ```
+
+Append `(name, custom_config)` to the `scenarios` list in `main.py` to include it in the Monte Carlo run.
 
 ## License
 
