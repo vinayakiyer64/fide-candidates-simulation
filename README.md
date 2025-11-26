@@ -1,11 +1,11 @@
-# FIDE Candidate Simulation
+# FIDE Candidates Simulation
 
 This project simulates the qualification cycle for the FIDE Candidates Tournament to evaluate the fairness of different qualification systems.
 
 ## Project Structure
 
 ```
-fide-candidate-simulation/
+fide-candidates-simulation/
 ├── data/
 │   └── players.json           # Top 100 players data (real + extrapolated)
 ├── src/
