@@ -230,11 +230,11 @@ def main():
     # RUN SIMULATIONS
     # =========================================================================
     
-    print("\n" + "=" * 100)
+    print("\n" + "=" * 125)
     print("Running Simulations (1000 seasons each)...")
-    print("=" * 100)
-    print(f"{'Scenario':<40} | {'Orig Elo':<10} | {'Live Elo':<10} | {'StdDev(Elo)':<12} | {'Top8 Qual%':<10}")
-    print("-" * 100)
+    print("=" * 125)
+    print(f"{'Scenario':<35} | {'Orig Elo':<8} | {'Live Elo':<8} | {'StdDev':<6} | {'Top8%':<6} | {'<2700':<6} | {'<2650':<6} | {'MinElo':<6}")
+    print("-" * 125)
     
     # Top 8 players by Elo (Target set for fairness metric)
     top_8_ids = {p.id for p in sorted(players, key=lambda x: x.elo, reverse=True)[:8]}
@@ -246,19 +246,24 @@ def main():
         results[name] = stats
         
         if stats.total_seasons == 0:
-            print(f"{name:<40} | Error: No qualifiers produced.")
+            print(f"{name:<35} | Error: No qualifiers produced.")
             continue
 
         # Metric: What % of the "True Top 8" qualified on average?
         avg_top8_qual = sum(stats.qual_probs.get(pid, 0) for pid in top_8_ids) / 8.0
         
         print(
-            f"{name:<40} | {stats.mean_avg_elo_original:.1f}      | "
-            f"{stats.mean_avg_elo_live:.1f}      | {stats.stddev_avg_elo_live:.1f}         | "
-            f"{avg_top8_qual*100:.1f}%"
+            f"{name:<35} | "
+            f"{stats.mean_avg_elo_original:.1f}    | "
+            f"{stats.mean_avg_elo_live:.1f}    | "
+            f"{stats.stddev_avg_elo_live:.1f}   | "
+            f"{avg_top8_qual*100:.1f}%  | "
+            f"{stats.avg_qualifiers_below_2700:.2f}   | "
+            f"{stats.avg_qualifiers_below_2650:.3f}  | "
+            f"{stats.avg_min_qualifier_elo:.0f}"
         )
 
-    print("-" * 100)
+    print("-" * 125)
     
     # =========================================================================
     # DETAILED QUALIFICATION PROBABILITIES

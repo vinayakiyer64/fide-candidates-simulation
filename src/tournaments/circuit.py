@@ -22,6 +22,11 @@ class CircuitEvent:
 class FideCircuitSimulator(Tournament):
     """
     Simulate the FIDE Circuit, a series of tournaments where players earn points.
+    
+    Note: This simulator runs a self-contained series of elite events (Grand Swiss style)
+    to generate circuit points. In reality, the FIDE Circuit aggregates results from
+    many external tournaments. This abstraction generates independent Elo variance
+    representing "other elite events" outside the main qualification cycle.
     """
 
     def __init__(self,

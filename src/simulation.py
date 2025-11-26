@@ -30,6 +30,10 @@ class SimulationStats:
     var_avg_elo_live: float
     qual_probs: Dict[int, float]
     total_seasons: int
+    # New outlier metrics
+    avg_qualifiers_below_2700: float
+    avg_qualifiers_below_2650: float
+    avg_min_qualifier_elo: float
 
     @property
     def stddev_avg_elo_live(self) -> float:
@@ -177,26 +181,26 @@ def run_monte_carlo(
         seed: Random seed for reproducibility
 
     Returns:
-        Dict containing:
-            - mean_avg_elo_original: Mean Elo of qualifiers based on pre-season ratings
-            - mean_avg_elo_live: Mean Elo of qualifiers based on post-season ratings
-            - var_avg_elo_live: Variance of average live Elo across seasons
-            - qual_probs: Qualification probability per player
-            - total_seasons: Number of valid seasons simulated
+        SimulationStats object with aggregated metrics.
     """
     if seed is not None:
         random.seed(seed)
 
     qual_counts = Counter()
     
-    # Track both original and live Elo metrics
+    # Accumulators for means
     original_elo_sums = 0.0
     live_elo_sums = 0.0
     live_elo_sums_sq = 0.0
+    
+    # Outlier accumulators
+    sum_qualifiers_below_2700 = 0
+    sum_qualifiers_below_2650 = 0
+    sum_min_qualifier_elo = 0.0
+    
     total_valid_seasons = 0
     
     # Pre-compute original stats for fast lookup
-    original_map = {p.id: p for p in players}
     original_elos = {p.id: p.elo for p in players}
 
     for season_idx in range(num_seasons):
@@ -219,25 +223,37 @@ def run_monte_carlo(
         original_elo_sums += avg_elo_original
         
         # Metrics based on LIVE Elo (updated through season)
-        avg_elo_live = sum(p.elo for p in quals) / len(quals)
+        live_elos = [p.elo for p in quals]
+        avg_elo_live = sum(live_elos) / len(quals)
         live_elo_sums += avg_elo_live
         live_elo_sums_sq += avg_elo_live ** 2
+        
+        # Outlier metrics (using LIVE Elo as that's the qualification basis)
+        sum_qualifiers_below_2700 += sum(1 for elo in live_elos if elo < 2700)
+        sum_qualifiers_below_2650 += sum(1 for elo in live_elos if elo < 2650)
+        if live_elos:
+            sum_min_qualifier_elo += min(live_elos)
         
         for p in quals:
             qual_counts[p.id] += 1
 
     if total_valid_seasons == 0:
-        return {}
+        # Return empty stats to avoid division by zero
+        return SimulationStats(0, 0, 0, {}, 0, 0, 0, 0)
 
-    # Statistics
+    # Compute final averages
+    mean_avg_elo_original = original_elo_sums / total_valid_seasons
+    mean_avg_elo_live = live_elo_sums / total_valid_seasons
+    var_avg_elo_live = (live_elo_sums_sq / total_valid_seasons) - mean_avg_elo_live ** 2
+    
+    avg_qualifiers_below_2700 = sum_qualifiers_below_2700 / total_valid_seasons
+    avg_qualifiers_below_2650 = sum_qualifiers_below_2650 / total_valid_seasons
+    avg_min_qualifier_elo = sum_min_qualifier_elo / total_valid_seasons
+
     qual_probs = {
         pid: count / total_valid_seasons
         for pid, count in qual_counts.items()
     }
-
-    mean_avg_elo_original = original_elo_sums / total_valid_seasons
-    mean_avg_elo_live = live_elo_sums / total_valid_seasons
-    var_avg_elo_live = (live_elo_sums_sq / total_valid_seasons) - mean_avg_elo_live ** 2
 
     return SimulationStats(
         mean_avg_elo_original=mean_avg_elo_original,
@@ -245,4 +261,7 @@ def run_monte_carlo(
         var_avg_elo_live=var_avg_elo_live,
         qual_probs=qual_probs,
         total_seasons=total_valid_seasons,
+        avg_qualifiers_below_2700=avg_qualifiers_below_2700,
+        avg_qualifiers_below_2650=avg_qualifiers_below_2650,
+        avg_min_qualifier_elo=avg_min_qualifier_elo,
     )
