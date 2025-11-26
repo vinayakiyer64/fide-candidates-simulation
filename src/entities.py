@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-import copy
 
 @dataclass
 class Player:
@@ -19,8 +18,13 @@ class Player:
     initial_rank: int  # rank by Elo
 
     def clone(self) -> 'Player':
-        """Create a deep copy of the player."""
-        return copy.deepcopy(self)
+        """Create a copy of the player (for simulation isolation)."""
+        return Player(
+            id=self.id,
+            name=self.name,
+            elo=self.elo,
+            initial_rank=self.initial_rank
+        )
 
 # Helper type alias for a list of Players
 PlayerPool = List[Player]
