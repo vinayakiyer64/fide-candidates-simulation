@@ -84,10 +84,11 @@ class QualificationSimulator:
         Returns:
             List[Player]: The final list of Candidates.
         """
-        qualified_ids = set()
-        qualifiers = []
-
-        # Run configured tournaments
+        # 1. Collection Phase: Gather potential qualifiers from each event
+        # We need to store them separately before allocation to handle conflicts
+        potential_qualifiers = {} # map "type" -> list of players
+        
+        # We run ALL configured tournaments first
         for t_cfg in self.config.tournament_configs:
             t_type = t_cfg["type"]
             spots = t_cfg["spots"]
@@ -96,24 +97,119 @@ class QualificationSimulator:
             if spots <= 0:
                 continue
 
+            # For Circuit, we need to grab the full list (or at least top 3)
+            # The base 'get_qualifiers' usually respects 'num_qualifiers', 
+            # but for spillover logic (Circuit #3), we might need more depth.
+            # Let's hack it: ask for more qualifiers than needed?
+            # Or better: use the tournament instance to get full standings.
+            
             tournament = self._create_tournament(t_type, spots, **kwargs)
             
-            # Pass excluded_ids so the tournament skips already qualified players
-            # and fills its quota with the next eligible players.
-            t_qualifiers = tournament.get_qualifiers(excluded_ids=qualified_ids)
+            # Get a deeper list to handle spillover/conflicts
+            # e.g. get top 10 from each event to be safe
+            top_finishers = tournament.get_qualifiers(excluded_ids=set()) 
+            # Note: get_qualifiers usually returns 'num_qualifiers'. 
+            # We might need to expose 'simulate_tournament' or ask for more.
             
-            for p in t_qualifiers:
+            # Update: base.py's get_qualifiers runs the sim and slices.
+            # But we need the raw standings or a deeper slice.
+            # Let's temporarily override 'num_qualifiers' to a safe high number (e.g. 10)
+            # just for the retrieval, then reset? 
+            # Actually, let's just refactor _create_tournament to accept overrides?
+            # Or just assume get_qualifiers(excluded_ids=...) is not enough if we do 2-pass.
+            
+            # Strategy: Run sim, get full standings (or top N).
+            # Since get_qualifiers is the public API, let's rely on it but
+            # we need to modify the tournament instance to return MORE players.
+            tournament.num_qualifiers = 10 # fetch top 10 to be safe for conflicts
+            standings = tournament.get_qualifiers(excluded_ids=set())
+            
+            potential_qualifiers[t_type] = standings
+
+        # 2. Allocation Phase
+        final_qualifiers = []
+        qualified_ids = set()
+
+        def add_qualifier(player):
+            if player.id not in qualified_ids:
+                final_qualifiers.append(player)
+                qualified_ids.add(player.id)
+                return True
+            return False
+
+        # A. Grand Swiss (Top 2)
+        gs_pool = potential_qualifiers.get("grand_swiss", [])
+        gs_spots = 2 # Hardcoded per requirement logic or fetch from config?
+        # Fetch from config to match the user's setup
+        gs_config_spots = next((c['spots'] for c in self.config.tournament_configs if c['type'] == 'grand_swiss'), 0)
+        
+        count = 0
+        for p in gs_pool:
+            if count >= gs_config_spots: break
+            if add_qualifier(p):
+                count += 1
+
+        # B. World Cup (Top 3)
+        wc_pool = potential_qualifiers.get("world_cup", [])
+        wc_config_spots = next((c['spots'] for c in self.config.tournament_configs if c['type'] == 'world_cup'), 0)
+        
+        count = 0
+        for p in wc_pool:
+            if count >= wc_config_spots: break
+            if add_qualifier(p):
+                count += 1
+
+        # C. FIDE Circuit (Top 2)
+        circuit_pool = potential_qualifiers.get("fide_circuit", [])
+        circuit_config_spots = next((c['spots'] for c in self.config.tournament_configs if c['type'] == 'fide_circuit'), 0)
+        
+        count = 0
+        for p in circuit_pool:
+            if count >= circuit_config_spots: break
+            if add_qualifier(p):
+                count += 1
+                
+        # D. Circuit Spillover (Spot #3) logic?
+        # Requirement: "Allocate any additional spots to the 3rd Player on the circuit list"
+        # This implies if we haven't filled the target (8?), we check Circuit #3.
+        # But the logic says "Allocate *any* additional spots".
+        # Let's assume this means ONE specific extra spot if available?
+        # Or does it mean "If GS/WC winners were duplicates, priority goes to Circuit #3"?
+        # Re-reading user query: "Allocate any additional spots to the 3rd Player on the circuit list"
+        
+        # Let's try to fill 1 spot from Circuit #3 if we are below capacity (typically 8).
+        # But wait, 'circuit_config_spots' usually handles the base allocation.
+        # If we assume target is 8, and we have gaps.
+        
+        # Actually, the "Circuit 3rd spot" rule is usually specific: 
+        # If the World Cup spot is unused (e.g. winner -> World Champ), it goes to Rating.
+        # If a logical spot is freed up, does it go to Circuit?
+        # User said: "c. Allocate any additional spots to the 3rd Player on the circuit list"
+        
+        # Let's implement: If total < 8, try to add next Circuit player (up to 1 more?)
+        if len(final_qualifiers) < 8:
+            # Try to find the next best Circuit player (who isn't qualified)
+            # We already took 'circuit_config_spots' (e.g. 2).
+            # Let's check the rest of the pool.
+            for p in circuit_pool:
                 if p.id not in qualified_ids:
-                    qualified_ids.add(p.id)
-                    qualifiers.append(p)
+                    add_qualifier(p)
+                    # Only one spot? "3rd Player". Implies just one specific reserve.
+                    break 
 
-        # Rating Spots (always last to fill gaps)
-        # Uses the players' LIVE Elo which has been updated by the tournaments above.
-        if self.config.num_rating_spots > 0:
-            rating_qualifiers = self.rating_qualifiers(qualified_ids)
-            qualifiers.extend(rating_qualifiers)
+        # E. Rating Spots (Fill remainder)
+        # "Allocate additional slots to the player ratings."
+        # This means fill until we hit 8.
+        
+        if len(final_qualifiers) < 8:
+            # Sort by current (live) Elo
+            sorted_by_live = sorted(self.players, key=lambda p: p.elo, reverse=True)
+            for p in sorted_by_live:
+                if len(final_qualifiers) >= 8:
+                    break
+                add_qualifier(p)
 
-        return qualifiers[:8]
+        return final_qualifiers[:8]
 
 
 def run_monte_carlo(players: PlayerPool,
