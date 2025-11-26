@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Set
+from typing import List, Dict
 from collections import defaultdict
 
 from src.entities import Player, PlayerPool
@@ -8,22 +8,15 @@ from src.tournaments.base import Tournament
 from src.tournaments.grand_swiss import GrandSwissSimulator
 
 @dataclass
-class CircuitTournament:
+class CircuitEvent:
     """
     Configuration for a single event within the FIDE Circuit.
-
-    Attributes:
-        name (str): Name of the event.
-        field_size (int): Number of players.
-        rounds (int): Number of rounds.
-        tar (float): Tournament Average Rating (approximate).
-        weight (float): Event weight (1.0 for classical, less for rapid/blitz).
     """
     name: str
     field_size: int
     rounds: int
-    tar: float  # tournament average rating
-    weight: float = 1.0  # classical=1.0, rapid<1, etc.
+    tar: float  # Tournament Average Rating
+    weight: float = 1.0
 
 
 class FideCircuitSimulator(Tournament):
@@ -33,103 +26,68 @@ class FideCircuitSimulator(Tournament):
 
     def __init__(self,
                  players: PlayerPool,
-                 num_qualifiers: int = 2,
-                 tournaments: List[CircuitTournament] = None):
+                 events: List[CircuitEvent] = None):
         """
         Initialize the FIDE Circuit simulator.
 
         Args:
             players (PlayerPool): Pool of available players.
-            num_qualifiers (int, optional): Number of qualification spots. Defaults to 2.
-            tournaments (List[CircuitTournament], optional): List of events. Defaults to standard set.
+            events (List[CircuitEvent], optional): List of events. Defaults to standard set.
         """
-        super().__init__(players, num_qualifiers)
-        if tournaments is None:
-            # Standard example events
-            self.tournaments = [
-                CircuitTournament("SuperGM RR 1", 12, 11, 2750, 1.0),
-                CircuitTournament("SuperGM RR 2", 10, 9, 2730, 1.0),
-                CircuitTournament("Strong Open 1", 80, 9, 2650, 1.0),
-                CircuitTournament("Strong Open 2", 80, 9, 2670, 1.0),
-                CircuitTournament("SuperSwiss 1", 100, 11, 2700, 1.0),
+        super().__init__(players)
+        if events is None:
+            self.events = [
+                CircuitEvent("SuperGM RR 1", 12, 11, 2750, 1.0),
+                CircuitEvent("SuperGM RR 2", 10, 9, 2730, 1.0),
+                CircuitEvent("Strong Open 1", 80, 9, 2650, 1.0),
+                CircuitEvent("Strong Open 2", 80, 9, 2670, 1.0),
+                CircuitEvent("SuperSwiss 1", 100, 11, 2700, 1.0),
             ]
         else:
-            self.tournaments = tournaments
+            self.events = events
 
-    def simulate_event(self, event: CircuitTournament) -> Dict[int, float]:
+    def _simulate_event(self, event: CircuitEvent) -> Dict[int, float]:
         """
         Simulate one circuit event and calculate points.
-
-        Args:
-            event (CircuitTournament): The event to simulate.
-
-        Returns:
-            Dict[int, float]: Map of player_id -> points earned.
         """
-        # Choose participants: stronger players more likely
         field = weighted_sample(self.players,
                                 min(event.field_size, len(self.players)),
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2600) / 200.0)
 
-        # Run a Swiss-like tournament (or Round Robin approximated as Swiss)
-        # We reuse GrandSwissSimulator logic for individual events.
-        # Note: This WILL update ratings because GrandSwissSimulator now updates ratings.
-        swiss = GrandSwissSimulator(field, num_qualifiers=0,
-                                    field_size=len(field),
-                                    rounds=event.rounds)
-        standings = swiss.simulate_tournament()  # list of (player, score)
+        swiss = GrandSwissSimulator(field, field_size=len(field), rounds=event.rounds)
+        standings = swiss.get_standings(top_n=len(field))
 
-        # Basic points for top 8 in top half (approx)
-        # FIDE rules are complex; this is a simplified model.
-        basic_points = [11, 8, 7, 6, 5, 4, 3, 2]  # winner gets 11
-        
-        # K factor depends on tournament strength (TAR)
+        basic_points = [11, 8, 7, 6, 5, 4, 3, 2]
         k = max(0.0, (event.tar - 2500.0) / 100.0)
         w = event.weight
 
         points = defaultdict(float)
         top_half = standings[:len(standings) // 2]
         
-        # Assign points to top 8 finishers
-        for i, (p, score) in enumerate(top_half[:8]):
+        for i, p in enumerate(top_half[:8]):
             B = basic_points[i]
             P = B * k * w
             points[p.id] += P
 
         return points
 
-    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
+    def get_standings(self, top_n: int = 10) -> List[Player]:
         """
-        Simulate the full circuit and return qualifiers.
-
-        Args:
-            excluded_ids (Set[int], optional): Players ineligible to qualify.
-
-        Returns:
-            List[Player]: The qualified players based on total circuit points.
+        Simulate the full circuit and return standings by total points.
         """
-        if excluded_ids is None:
-            excluded_ids = set()
-
         total_points = defaultdict(float)
 
-        for event in self.tournaments:
-            event_points = self.simulate_event(event)
+        for event in self.events:
+            event_points = self._simulate_event(event)
             for pid, pts in event_points.items():
                 total_points[pid] += pts
 
-        # Sort players by points then Elo
-        # Note: 'p.elo' here is the LIVE elo after all events
-        scored_players = [(p, total_points[p.id]) for p in self.players if total_points[p.id] > 0]
-        if not scored_players:
-            return []
-
-        scored_players.sort(key=lambda x: (x[1], x[0].elo), reverse=True)
-
-        qualifiers = []
-        for p, pts in scored_players:
-            if p.id not in excluded_ids:
-                qualifiers.append(p)
-                if len(qualifiers) >= self.num_qualifiers:
-                    break
-        return qualifiers
+        # Create list of (player, points) for players who scored
+        player_map = {p.id: p for p in self.players}
+        scored = [(player_map[pid], pts) for pid, pts in total_points.items() if pts > 0]
+        
+        # Sort by points, then Elo
+        scored.sort(key=lambda x: (x[1], x[0].elo), reverse=True)
+        
+        standings = [p for p, pts in scored]
+        return standings[:top_n]

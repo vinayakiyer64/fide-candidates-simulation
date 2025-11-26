@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List
 import random
 
 from src.entities import Player, PlayerPool
@@ -9,15 +9,10 @@ from src.tournaments.base import Tournament
 class WorldCupSimulator(Tournament):
     """
     Simulate a knockout World Cup tournament.
-
-    Attributes:
-        field_size (int): Total number of players in the knockout.
-        games_per_match (int): Number of games played per match (tiebreaks simplified).
     """
 
     def __init__(self,
                  players: PlayerPool,
-                 num_qualifiers: int = 3,
                  field_size: int = 128,
                  games_per_match: int = 2):
         """
@@ -25,36 +20,23 @@ class WorldCupSimulator(Tournament):
 
         Args:
             players (PlayerPool): Pool of available players.
-            num_qualifiers (int, optional): Number of qualification spots. Defaults to 3.
             field_size (int, optional): Size of the knockout field. Defaults to 128.
             games_per_match (int, optional): Games per match. Defaults to 2.
         """
-        super().__init__(players, num_qualifiers)
+        super().__init__(players)
         self.field_size = field_size
         self.games_per_match = games_per_match
 
-    def simulate_match(self, a: Player, b: Player) -> Player:
+    def _simulate_match(self, a: Player, b: Player) -> Player:
         """
         Simulate a match between two players, updating their Elos.
-
-        Args:
-            a (Player): First player.
-            b (Player): Second player.
-
-        Returns:
-            Player: The winner of the match.
         """
         score_a = 0.0
         score_b = 0.0
-        
-        # K-factor for World Cup (Knockout usually has higher K or standard 10/20)
-        # We use K=10 for classical portion simulation
         K = 10.0
 
         for _ in range(self.games_per_match):
             res = game_outcome_with_draws(a.elo, b.elo)
-            
-            # Update Ratings
             a.elo, b.elo = update_ratings(a.elo, b.elo, res, k_factor=K)
 
             if res == 1.0:
@@ -70,73 +52,41 @@ class WorldCupSimulator(Tournament):
         elif score_b > score_a:
             return b
         
-        # Tiebreak: assume higher Elo has slight edge
-        # We don't update ratings for tiebreaks (usually rapid/blitz)
+        # Tiebreak
         ea = elo_expected_score(a.elo, b.elo)
-        if random.random() < ea:
-            return a
-        else:
-            return b
+        return a if random.random() < ea else b
 
-    def simulate_tournament(self) -> List[Player]:
+    def get_standings(self, top_n: int = 10) -> List[Player]:
         """
-        Run the knockout tournament.
-
-        Returns:
-            List[Player]: Players sorted by finishing position (Winner, Runner-up, etc.)
+        Run the knockout tournament and return top finishers.
         """
-        # Choose field_size players, biased to include stronger players more often
+        # Select field
         field = weighted_sample(self.players,
                                 min(self.field_size, len(self.players)),
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2500) / 100.0)
 
-        # Random initial seeding by Elo (you can mimic FIDE seeding later)
+        # Seed by Elo
         field = sorted(field, key=lambda p: p.elo, reverse=True)
 
         # Knockout bracket
         current = field[:]
-        positions = []  # will store losers in reverse finishing order
+        positions = []
+        
         while len(current) > 1:
             next_round = []
-            # pair top vs bottom etc.
             for i in range(len(current) // 2):
                 a = current[i]
                 b = current[-(i+1)]
-                winner = self.simulate_match(a, b)
+                winner = self._simulate_match(a, b)
                 loser = b if winner is a else a
                 positions.append(loser)
                 next_round.append(winner)
             current = next_round
 
-        # Champion is remaining player
-        champion = current[0]
-        positions.append(champion)
+        # Champion
+        if current:
+            positions.append(current[0])
 
-        # positions now has [round1 losers, round2 losers, ..., champion]
-        # Roughly interpret last elements as top finishers:
-        positions_sorted = positions[::-1]  # champion first
-        return positions_sorted
-
-    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
-        """
-        Run the tournament and return the top eligible players.
-
-        Args:
-            excluded_ids (Set[int], optional): Players ineligible to qualify.
-
-        Returns:
-            List[Player]: The qualified players.
-        """
-        if excluded_ids is None:
-            excluded_ids = set()
-            
-        standings = self.simulate_tournament()
-        
-        qualifiers = []
-        for p in standings:
-            if p.id not in excluded_ids:
-                qualifiers.append(p)
-                if len(qualifiers) >= self.num_qualifiers:
-                    break
-                    
-        return qualifiers
+        # Reverse to get champion first
+        standings = positions[::-1]
+        return standings[:top_n]

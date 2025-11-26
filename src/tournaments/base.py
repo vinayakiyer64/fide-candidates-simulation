@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Set
+from typing import List
 from src.entities import Player, PlayerPool
 
 class Tournament(ABC):
@@ -8,30 +8,26 @@ class Tournament(ABC):
 
     Attributes:
         players (PlayerPool): List of players eligible for the tournament.
-        num_qualifiers (int): Number of players who qualify from this tournament.
     """
 
-    def __init__(self, players: PlayerPool, num_qualifiers: int):
+    def __init__(self, players: PlayerPool):
         """
         Initialize the tournament simulator.
 
         Args:
             players (PlayerPool): Pool of available players.
-            num_qualifiers (int): Number of qualification spots available.
         """
         self.players = players
-        self.num_qualifiers = num_qualifiers
 
     @abstractmethod
-    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
+    def get_standings(self, top_n: int = 10) -> List[Player]:
         """
-        Run the tournament simulation and return the qualifiers.
+        Run the tournament simulation and return the top N finishers.
 
         Args:
-            excluded_ids (Set[int], optional): IDs of players who are ineligible to qualify
-                                               (e.g., already qualified). Defaults to None.
+            top_n (int): Number of top finishers to return.
 
         Returns:
-            List[Player]: The list of players who qualified.
+            List[Player]: Ordered list of players (winner first).
         """
         pass

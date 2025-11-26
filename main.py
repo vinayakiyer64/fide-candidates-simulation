@@ -6,8 +6,11 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.entities import Player, PlayerPool
-from src.simulation import QualificationConfig, run_monte_carlo
+from src.config import QualificationConfig, TournamentSlot
+from src.simulation import run_monte_carlo
 from src.utils import augment_player_pool
+from src.allocation.strict_top_n import StrictTopNAllocation
+from src.allocation.spillover import SpilloverAllocation
 
 def load_players(filename: str = "data/players.json") -> PlayerPool:
     """
@@ -25,8 +28,6 @@ def load_players(filename: str = "data/players.json") -> PlayerPool:
                 initial_rank=p["initial_rank"] if "initial_rank" in p else p["id"]
             ))
         
-        # Augment to ensure we have enough players for large tournaments (World Cup)
-        # Real data might stop at rank 100 (~2640 Elo). We want down to 2400.
         print(f"Loaded {len(players)} real players. Augmenting pool...")
         players = augment_player_pool(players, target_min_elo=2400.0)
         print(f"Total player pool size after augmentation: {len(players)}")
@@ -44,69 +45,67 @@ def main():
 
     print(f"Top player: {players[0].name} ({players[0].elo})")
 
-    # 1. Define Scenarios using the new Modular Config
+    # Define Scenarios using the new Config Structure
     
     # Current System:
-    # - 1 Rating Spot
-    # - 3 World Cup Spots
-    # - 2 Grand Swiss Spots
-    # - 2 FIDE Circuit Spots
-    # Priority Order: Grand Swiss > World Cup > FIDE Circuit > Rating
+    # - Grand Swiss: 2 spots (Strict Top 2)
+    # - World Cup: 3 spots (Strict Top 3)
+    # - FIDE Circuit: Up to 3 spots (Spillover, fills gaps)
+    # - Rating: Fills remainder to 8
     config_current = QualificationConfig(
-        num_rating_spots=1,
-        tournament_configs=[
-            {"type": "grand_swiss", "spots": 2},
-            {"type": "world_cup", "spots": 3},
-            {"type": "fide_circuit", "spots": 2}
+        target_candidates=8,
+        slots=[
+            TournamentSlot("grand_swiss", max_spots=2, strategy=StrictTopNAllocation()),
+            TournamentSlot("world_cup", max_spots=3, strategy=StrictTopNAllocation()),
+            TournamentSlot("fide_circuit", max_spots=3, strategy=SpilloverAllocation()),
         ]
     )
     
     # Scenario A: "Pure Meritocracy" (Top 8 by Rating)
     config_rating_only = QualificationConfig(
-        num_rating_spots=8,
-        tournament_configs=[]
+        target_candidates=8,
+        slots=[]  # No tournaments, all 8 spots go to Rating
     )
     
     # Scenario B: Re-allocate WC to Rating
-    # Shift 2 spots from WC to Rating: Rating=3, WC=1
+    # Reduce WC from 3 to 1 spot
     config_more_rating = QualificationConfig(
-        num_rating_spots=3,
-        tournament_configs=[
-            {"type": "grand_swiss", "spots": 2},
-            {"type": "world_cup", "spots": 1},
-            {"type": "fide_circuit", "spots": 2}
+        target_candidates=8,
+        slots=[
+            TournamentSlot("grand_swiss", max_spots=2, strategy=StrictTopNAllocation()),
+            TournamentSlot("world_cup", max_spots=1, strategy=StrictTopNAllocation()),
+            TournamentSlot("fide_circuit", max_spots=3, strategy=SpilloverAllocation()),
         ]
     )
     
     # Scenario C: Re-allocate WC to Circuit
-    # Shift 2 spots from WC to Circuit: WC=1, Circuit=4
+    # Reduce WC from 3 to 1, increase Circuit spillover potential
     config_more_circuit = QualificationConfig(
-        num_rating_spots=1,
-        tournament_configs=[
-            {"type": "grand_swiss", "spots": 2},
-            {"type": "world_cup", "spots": 1},
-            {"type": "fide_circuit", "spots": 4}
+        target_candidates=8,
+        slots=[
+            TournamentSlot("grand_swiss", max_spots=2, strategy=StrictTopNAllocation()),
+            TournamentSlot("world_cup", max_spots=1, strategy=StrictTopNAllocation()),
+            TournamentSlot("fide_circuit", max_spots=5, strategy=SpilloverAllocation()),
         ]
     )
     
-    # Custom Scenario: "Grand Slam" 
-    # 4 Grand Swiss tournaments, 2 spots each. No Rating spots.
+    # Custom Scenario: "Grand Slam" (4x Grand Swiss, 2 spots each)
+    # Note: This runs 4 separate GS tournaments. 
+    # With current design, we'd need to handle multiple tournaments of same type.
+    # For simplicity, we simulate this as one large GS with more spots.
     config_grand_slam = QualificationConfig(
-        num_rating_spots=0,
-        tournament_configs=[
-            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
-            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
-            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
-            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
+        target_candidates=8,
+        slots=[
+            TournamentSlot("grand_swiss", max_spots=8, strategy=SpilloverAllocation()),
         ]
     )
 
     scenarios = [
         ("Current System", config_current),
         ("Pure Rating (Reference)", config_rating_only),
-        ("More Rating Spots (+2 from WC)", config_more_rating),
-        ("More Circuit Spots (+2 from WC)", config_more_circuit),
-        ("Grand Slam (4x Swiss)", config_grand_slam),
+        ("More Rating Spots (-2 WC)", config_more_rating),
+        ("More Circuit Spots (-2 WC)", config_more_circuit),
+        ("Grand Slam (Swiss Only)", config_grand_slam),
     ]
     
     # Run simulations
