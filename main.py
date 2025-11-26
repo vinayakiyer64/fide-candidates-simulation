@@ -7,8 +7,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.entities import Player, PlayerPool
 from src.simulation import QualificationConfig, run_monte_carlo
+from src.utils import augment_player_pool
 
 def load_players(filename: str = "data/players.json") -> PlayerPool:
+    """
+    Load players from JSON file and augment the pool to ensure depth.
+    """
     try:
         with open(filename, "r") as f:
             data = json.load(f)
@@ -20,62 +24,80 @@ def load_players(filename: str = "data/players.json") -> PlayerPool:
                 elo=p["elo"],
                 initial_rank=p["initial_rank"] if "initial_rank" in p else p["id"]
             ))
+        
+        # Augment to ensure we have enough players for large tournaments (World Cup)
+        # Real data might stop at rank 100 (~2640 Elo). We want down to 2400.
+        print(f"Loaded {len(players)} real players. Augmenting pool...")
+        players = augment_player_pool(players, target_min_elo=2400.0)
+        print(f"Total player pool size after augmentation: {len(players)}")
+        
         return players
     except FileNotFoundError:
         print(f"Warning: {filename} not found. Using dummy data.")
-        players = []
-        base_elo = 2850
-        for i in range(100):
-            elo = base_elo - i * 2
-            players.append(Player(
-                id=i,
-                name=f"Player_{i+1}",
-                elo=elo,
-                initial_rank=i+1
-            ))
-        return players
+        return []
 
 def main():
     players = load_players()
-    print(f"Loaded {len(players)} players.")
-    if players:
-        print(f"Top player: {players[0].name} ({players[0].elo})")
+    if not players:
+        print("No players loaded. Exiting.")
+        return
 
-    # 1. Define Scenarios
+    print(f"Top player: {players[0].name} ({players[0].elo})")
+
+    # 1. Define Scenarios using the new Modular Config
     
-    # Baseline: As described by user
-    # a. ELO (1), b. GS (2), c. WC (3), d. Circuit (2) -> Total 8
+    # Current System:
+    # - 1 Rating Spot
+    # - 3 World Cup Spots
+    # - 2 Grand Swiss Spots
+    # - 2 FIDE Circuit Spots
     config_current = QualificationConfig(
-        num_rating=1,
-        num_world_cup=3,
-        num_grand_swiss=2,
-        num_circuit=2
+        num_rating_spots=1,
+        tournament_configs=[
+            {"type": "world_cup", "spots": 3},
+            {"type": "grand_swiss", "spots": 2},
+            {"type": "fide_circuit", "spots": 2}
+        ]
     )
     
     # Scenario A: "Pure Meritocracy" (Top 8 by Rating)
     config_rating_only = QualificationConfig(
-        num_rating=8,
-        num_world_cup=0,
-        num_grand_swiss=0,
-        num_circuit=0
+        num_rating_spots=8,
+        tournament_configs=[]
     )
     
     # Scenario B: Re-allocate WC to Rating
-    # Shift 2 spots from WC to Rating: Rating=3, WC=1, GS=2, Circuit=2
+    # Shift 2 spots from WC to Rating: Rating=3, WC=1
     config_more_rating = QualificationConfig(
-        num_rating=3,
-        num_world_cup=1,
-        num_grand_swiss=2,
-        num_circuit=2
+        num_rating_spots=3,
+        tournament_configs=[
+            {"type": "world_cup", "spots": 1},
+            {"type": "grand_swiss", "spots": 2},
+            {"type": "fide_circuit", "spots": 2}
+        ]
     )
     
     # Scenario C: Re-allocate WC to Circuit
-    # Shift 2 spots from WC to Circuit: Rating=1, WC=1, GS=2, Circuit=4
+    # Shift 2 spots from WC to Circuit: WC=1, Circuit=4
     config_more_circuit = QualificationConfig(
-        num_rating=1,
-        num_world_cup=1,
-        num_grand_swiss=2,
-        num_circuit=4
+        num_rating_spots=1,
+        tournament_configs=[
+            {"type": "world_cup", "spots": 1},
+            {"type": "grand_swiss", "spots": 2},
+            {"type": "fide_circuit", "spots": 4}
+        ]
+    )
+    
+    # Custom Scenario: "Grand Slam" 
+    # 4 Grand Swiss tournaments, 2 spots each. No Rating spots.
+    config_grand_slam = QualificationConfig(
+        num_rating_spots=0,
+        tournament_configs=[
+            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
+            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
+            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
+            {"type": "grand_swiss", "spots": 2, "kwargs": {"rounds": 11}},
+        ]
     )
 
     scenarios = [
@@ -83,13 +105,14 @@ def main():
         ("Pure Rating (Reference)", config_rating_only),
         ("More Rating Spots (+2 from WC)", config_more_rating),
         ("More Circuit Spots (+2 from WC)", config_more_circuit),
+        ("Grand Slam (4x Swiss)", config_grand_slam),
     ]
     
     # Run simulations
     print("\nRunning Simulations (500 seasons each)...")
-    print("-" * 60)
-    print(f"{'Scenario':<30} | {'Avg Elo':<10} | {'Top 8 Qual%':<12} | {'Corr(Rank,Prob)':<15}")
-    print("-" * 60)
+    print("-" * 75)
+    print(f"{'Scenario':<35} | {'Avg Elo':<10} | {'Top 8 Qual%':<12} | {'Corr(Rank,Prob)':<15}")
+    print("-" * 75)
     
     # Top 8 players by Elo (Target set)
     top_8_ids = {p.id for p in sorted(players, key=lambda x: x.elo, reverse=True)[:8]}
@@ -97,14 +120,16 @@ def main():
     for name, cfg in scenarios:
         res = run_monte_carlo(players, cfg, num_seasons=500, seed=42)
         
+        if not res:
+            print(f"{name:<35} | Error: No qualifiers produced.")
+            continue
+
         # Metric: What % of the "True Top 8" qualified on average?
-        # sum(prob of qualification for p in top_8) / 8
         avg_top8_qual = sum(res["qual_probs"].get(pid, 0) for pid in top_8_ids) / 8.0
         
-        print(f"{name:<30} | {res['mean_avg_elo']:.1f}      | {avg_top8_qual*100:.1f}%        | {res['corr_rank_prob']:.3f}")
+        print(f"{name:<35} | {res['mean_avg_elo']:.1f}      | {avg_top8_qual*100:.1f}%        | {res['corr_rank_prob']:.3f}")
 
-    print("-" * 60)
+    print("-" * 75)
 
 if __name__ == "__main__":
     main()
-

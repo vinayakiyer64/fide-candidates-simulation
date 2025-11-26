@@ -2,7 +2,16 @@ import random
 import math
 
 def elo_expected_score(ra: float, rb: float) -> float:
-    """Expected score for player A vs player B."""
+    """
+    Calculate the expected score for player A vs player B using the Elo formula.
+
+    Args:
+        ra (float): Rating of player A.
+        rb (float): Rating of player B.
+
+    Returns:
+        float: Expected score for player A (between 0.0 and 1.0).
+    """
     return 1.0 / (1.0 + 10 ** (-(ra - rb) / 400.0))
 
 
@@ -12,12 +21,19 @@ def game_outcome_with_draws(ra: float,
                             d_min: float = 0.15,
                             D: float = 400.0) -> float:
     """
-    Simulate one game result for A vs B.
+    Simulate one game result for A vs B, accounting for draw probabilities.
+
+    The draw probability is modeled to decrease as the rating difference increases.
+
+    Args:
+        ra (float): Rating of player A.
+        rb (float): Rating of player B.
+        d0 (float, optional): Maximum draw probability (equal ratings). Defaults to 0.55.
+        d_min (float, optional): Minimum draw probability. Defaults to 0.15.
+        D (float, optional): Scaling factor for rating difference. Defaults to 400.0.
 
     Returns:
-        1.0 for A win
-        0.5 for draw
-        0.0 for A loss
+        float: 1.0 for A win, 0.5 for draw, 0.0 for A loss.
     """
     ea = elo_expected_score(ra, rb)
     delta = abs(ra - rb)
@@ -38,4 +54,3 @@ def game_outcome_with_draws(ra: float,
         return 0.5
     else:
         return 0.0
-

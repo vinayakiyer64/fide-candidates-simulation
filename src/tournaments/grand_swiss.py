@@ -5,11 +5,15 @@ import random
 from ..entities import Player, PlayerPool
 from ..game_logic import game_outcome_with_draws
 from ..utils import weighted_sample
+from .base import Tournament
 
-class GrandSwissSimulator:
+class GrandSwissSimulator(Tournament):
     """
-    Approximate 11-round Swiss with N players.
-    We group players by score and pair within groups.
+    Simulate a Swiss-system tournament (e.g., FIDE Grand Swiss).
+
+    Attributes:
+        field_size (int): Number of participants.
+        rounds (int): Number of rounds played.
     """
 
     def __init__(self,
@@ -17,20 +21,35 @@ class GrandSwissSimulator:
                  num_qualifiers: int = 2,
                  field_size: int = 110,
                  rounds: int = 11):
-        self.players = players
-        self.num_qualifiers = num_qualifiers
+        """
+        Initialize the Grand Swiss simulator.
+
+        Args:
+            players (PlayerPool): Pool of available players.
+            num_qualifiers (int, optional): Number of qualification spots. Defaults to 2.
+            field_size (int, optional): Total players in the tournament. Defaults to 110.
+            rounds (int, optional): Number of swiss rounds. Defaults to 11.
+        """
+        super().__init__(players, num_qualifiers)
         self.field_size = field_size
         self.rounds = rounds
 
     def simulate_tournament(self) -> List[Tuple[Player, float]]:
+        """
+        Run the Swiss tournament.
+
+        Returns:
+            List[Tuple[Player, float]]: List of (Player, Score), sorted by score descending.
+        """
+        # Selection: Strong players + wildcards. Modeled by weighted sample.
         field = weighted_sample(self.players,
                                 min(self.field_size, len(self.players)),
-                                weight_fn=lambda p: 1.0 + max(0, p.elo - 2600) / 200.0)
+                                weight_fn=lambda p: 1.0 + max(0, p.elo - 2500) / 100.0)
 
         scores = {p.id: 0.0 for p in field}
 
         for _ in range(self.rounds):
-            # Group by score (approximate Swiss)
+            # Group by score (approximate Swiss pairings)
             groups = defaultdict(list)
             for p in field:
                 groups[scores[p.id]].append(p)
@@ -39,10 +58,11 @@ class GrandSwissSimulator:
 
             for score_group, group_players in groups.items():
                 random.shuffle(group_players)
-                # pair them in order
+                # Pair them in random order within score group
+                # (Simplified pairing: ignores colors and past opponents)
                 for i in range(0, len(group_players), 2):
                     if i + 1 >= len(group_players):
-                        # bye: assign half point
+                        # Bye: assign half point
                         new_scores[group_players[i].id] += 0.5
                         continue
                     a = group_players[i]
@@ -64,6 +84,11 @@ class GrandSwissSimulator:
         return [(p, scores[p.id]) for p in standings]
 
     def get_qualifiers(self) -> List[Player]:
+        """
+        Run the tournament and return the top `num_qualifiers` players.
+
+        Returns:
+            List[Player]: The qualified players.
+        """
         standings = self.simulate_tournament()
         return [p for p, s in standings[:self.num_qualifiers]]
-

@@ -4,10 +4,21 @@ from collections import defaultdict
 
 from ..entities import Player, PlayerPool
 from ..utils import weighted_sample
+from .base import Tournament
 from .grand_swiss import GrandSwissSimulator
 
 @dataclass
 class CircuitTournament:
+    """
+    Configuration for a single event within the FIDE Circuit.
+
+    Attributes:
+        name (str): Name of the event.
+        field_size (int): Number of players.
+        rounds (int): Number of rounds.
+        tar (float): Tournament Average Rating (approximate).
+        weight (float): Event weight (1.0 for classical, less for rapid/blitz).
+    """
     name: str
     field_size: int
     rounds: int
@@ -15,20 +26,26 @@ class CircuitTournament:
     weight: float = 1.0  # classical=1.0, rapid<1, etc.
 
 
-class FideCircuitSimulator:
+class FideCircuitSimulator(Tournament):
     """
-    Simulate an annual FIDE Circuit composed of several events.
-    We simplify the points formula but keep the key structure.
+    Simulate the FIDE Circuit, a series of tournaments where players earn points.
     """
 
     def __init__(self,
                  players: PlayerPool,
                  num_qualifiers: int = 2,
                  tournaments: List[CircuitTournament] = None):
-        self.players = players
-        self.num_qualifiers = num_qualifiers
+        """
+        Initialize the FIDE Circuit simulator.
+
+        Args:
+            players (PlayerPool): Pool of available players.
+            num_qualifiers (int, optional): Number of qualification spots. Defaults to 2.
+            tournaments (List[CircuitTournament], optional): List of events. Defaults to standard set.
+        """
+        super().__init__(players, num_qualifiers)
         if tournaments is None:
-            # Some example events; replace with real data later
+            # Standard example events
             self.tournaments = [
                 CircuitTournament("SuperGM RR 1", 12, 11, 2750, 1.0),
                 CircuitTournament("SuperGM RR 2", 10, 9, 2730, 1.0),
@@ -41,32 +58,37 @@ class FideCircuitSimulator:
 
     def simulate_event(self, event: CircuitTournament) -> Dict[int, float]:
         """
-        Simulate one event and return Circuit points per player id.
-        Points formula:
-            P = B * k * w
-        with:
-            B: basic points by rank
-            k: (tar - 2500) / 100
-            w: event.weight
+        Simulate one circuit event and calculate points.
+
+        Args:
+            event (CircuitTournament): The event to simulate.
+
+        Returns:
+            Dict[int, float]: Map of player_id -> points earned.
         """
         # Choose participants: stronger players more likely
         field = weighted_sample(self.players,
                                 min(event.field_size, len(self.players)),
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2600) / 200.0)
 
-        # Run a Swiss-like tournament
+        # Run a Swiss-like tournament (or Round Robin approximated as Swiss)
         swiss = GrandSwissSimulator(field, num_qualifiers=0,
                                     field_size=len(field),
                                     rounds=event.rounds)
         standings = swiss.simulate_tournament()  # list of (player, score)
 
         # Basic points for top 8 in top half (approx)
+        # FIDE rules are complex; this is a simplified model.
         basic_points = [11, 8, 7, 6, 5, 4, 3, 2]  # winner gets 11
+        
+        # K factor depends on tournament strength (TAR)
         k = max(0.0, (event.tar - 2500.0) / 100.0)
         w = event.weight
 
         points = defaultdict(float)
         top_half = standings[:len(standings) // 2]
+        
+        # Assign points to top 8 finishers
         for i, (p, score) in enumerate(top_half[:8]):
             B = basic_points[i]
             P = B * k * w
@@ -74,9 +96,12 @@ class FideCircuitSimulator:
 
         return points
 
-    def simulate_circuit(self) -> List[Player]:
+    def get_qualifiers(self) -> List[Player]:
         """
-        Return qualifiers by total circuit points over all events.
+        Simulate the full circuit and return qualifiers.
+
+        Returns:
+            List[Player]: The qualified players based on total circuit points.
         """
         total_points = defaultdict(float)
 
@@ -88,7 +113,6 @@ class FideCircuitSimulator:
         # Sort players by points then Elo
         scored_players = [(p, total_points[p.id]) for p in self.players if total_points[p.id] > 0]
         if not scored_players:
-            # If nobody scored (very small test), just return empty
             return []
 
         scored_players.sort(key=lambda x: (x[1], x[0].elo), reverse=True)
@@ -102,4 +126,3 @@ class FideCircuitSimulator:
             if len(qualifiers) >= self.num_qualifiers:
                 break
         return qualifiers
-

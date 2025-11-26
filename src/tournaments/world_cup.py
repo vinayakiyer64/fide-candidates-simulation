@@ -1,17 +1,18 @@
-from dataclasses import dataclass
-from typing import List, Tuple, Dict
-from collections import defaultdict
+from typing import List
 import random
 
 from ..entities import Player, PlayerPool
 from ..game_logic import game_outcome_with_draws, elo_expected_score
 from ..utils import weighted_sample
+from .base import Tournament
 
-class WorldCupSimulator:
+class WorldCupSimulator(Tournament):
     """
-    Simulate a knockout World Cup.
-    We ignore color assignments and tiebreak time controls and approximate
-    each match by a small number of classical-like games.
+    Simulate a knockout World Cup tournament.
+
+    Attributes:
+        field_size (int): Total number of players in the knockout.
+        games_per_match (int): Number of games played per match (tiebreaks simplified).
     """
 
     def __init__(self,
@@ -19,13 +20,30 @@ class WorldCupSimulator:
                  num_qualifiers: int = 3,
                  field_size: int = 128,
                  games_per_match: int = 2):
-        self.players = players
-        self.num_qualifiers = num_qualifiers
+        """
+        Initialize the World Cup simulator.
+
+        Args:
+            players (PlayerPool): Pool of available players.
+            num_qualifiers (int, optional): Number of qualification spots. Defaults to 3.
+            field_size (int, optional): Size of the knockout field. Defaults to 128.
+            games_per_match (int, optional): Games per match. Defaults to 2.
+        """
+        super().__init__(players, num_qualifiers)
         self.field_size = field_size
         self.games_per_match = games_per_match
 
     def simulate_match(self, a: Player, b: Player) -> Player:
-        """Return winner of a mini-match between players A and B."""
+        """
+        Simulate a match between two players.
+
+        Args:
+            a (Player): First player.
+            b (Player): Second player.
+
+        Returns:
+            Player: The winner of the match.
+        """
         score_a = 0.0
         score_b = 0.0
         for _ in range(self.games_per_match):
@@ -42,6 +60,7 @@ class WorldCupSimulator:
             return a
         elif score_b > score_a:
             return b
+        
         # Tiebreak: assume higher Elo has slight edge
         ea = elo_expected_score(a.elo, b.elo)
         if random.random() < ea:
@@ -51,12 +70,17 @@ class WorldCupSimulator:
 
     def simulate_tournament(self) -> List[Player]:
         """
-        Return a list of players sorted by finishing position (1st, 2nd, 3rd, ...).
+        Run the knockout tournament.
+
+        Returns:
+            List[Player]: Players sorted by finishing position (Winner, Runner-up, etc.)
         """
         # Choose field_size players, biased to include stronger players more often
+        # In reality, WC spots are allocated by rating + continental qualifiers. 
+        # We use a weighted sample to approximate "mostly strong players get in".
         field = weighted_sample(self.players,
                                 min(self.field_size, len(self.players)),
-                                weight_fn=lambda p: 1.0 + max(0, p.elo - 2600) / 200.0)
+                                weight_fn=lambda p: 1.0 + max(0, p.elo - 2500) / 100.0)
 
         # Random initial seeding by Elo (you can mimic FIDE seeding later)
         field = sorted(field, key=lambda p: p.elo, reverse=True)
@@ -86,7 +110,12 @@ class WorldCupSimulator:
         return positions_sorted
 
     def get_qualifiers(self) -> List[Player]:
+        """
+        Run the tournament and return the top `num_qualifiers` players.
+
+        Returns:
+            List[Player]: The qualified players.
+        """
         standings = self.simulate_tournament()
         # Take top num_qualifiers distinct players
         return standings[:self.num_qualifiers]
-
