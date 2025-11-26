@@ -1,602 +1,602 @@
 [
   {
-    "id": 1,
-    "name": "Magnus Carlsen",
-    "elo": 2839,
+    "id": 1503014,
+    "name": "Carlsen, Magnus",
+    "elo": 2839.7,
     "initial_rank": 1
   },
   {
-    "id": 2,
-    "name": "Hikaru Nakamura",
-    "elo": 2813,
+    "id": 2016192,
+    "name": "Nakamura, Hikaru",
+    "elo": 2810.5,
     "initial_rank": 2
   },
   {
-    "id": 3,
-    "name": "Fabiano Caruana",
-    "elo": 2795,
+    "id": 2020009,
+    "name": "Caruana, Fabiano",
+    "elo": 2795.0,
     "initial_rank": 3
   },
   {
-    "id": 4,
-    "name": "Vincent Keymer",
-    "elo": 2773,
+    "id": 12940690,
+    "name": "Keymer, Vincent",
+    "elo": 2777.6,
     "initial_rank": 4
   },
   {
-    "id": 5,
-    "name": "Anish Giri",
-    "elo": 2769,
+    "id": 35009192,
+    "name": "Erigaisi Arjun",
+    "elo": 2774.6,
     "initial_rank": 5
   },
   {
-    "id": 6,
-    "name": "Arjun Erigaisi",
-    "elo": 2769,
+    "id": 12573981,
+    "name": "Firouzja, Alireza",
+    "elo": 2762.0,
     "initial_rank": 6
   },
   {
-    "id": 7,
-    "name": "Praggnanandhaa Rameshbabu",
-    "elo": 2768,
+    "id": 25059530,
+    "name": "Praggnanandhaa R",
+    "elo": 2760.8,
     "initial_rank": 7
   },
   {
-    "id": 8,
-    "name": "Wesley So",
-    "elo": 2764,
+    "id": 24116068,
+    "name": "Giri, Anish",
+    "elo": 2760.0,
     "initial_rank": 8
   },
   {
-    "id": 9,
-    "name": "Gukesh Dommaraju",
-    "elo": 2763,
+    "id": 8603405,
+    "name": "Wei, Yi",
+    "elo": 2754.8,
     "initial_rank": 9
   },
   {
-    "id": 10,
-    "name": "Alireza Firouzja",
-    "elo": 2762,
+    "id": 46616543,
+    "name": "Gukesh D",
+    "elo": 2754.4,
     "initial_rank": 10
   },
   {
-    "id": 11,
-    "name": "Wei Yi",
-    "elo": 2752,
+    "id": 5202213,
+    "name": "So, Wesley",
+    "elo": 2753.4,
     "initial_rank": 11
   },
   {
-    "id": 12,
-    "name": "Nodirbek Abdusattorov",
-    "elo": 2750,
+    "id": 5000017,
+    "name": "Anand, Viswanathan",
+    "elo": 2743.0,
     "initial_rank": 12
   },
   {
-    "id": 13,
-    "name": "Viswanathan Anand",
-    "elo": 2743,
+    "id": 738590,
+    "name": "Rapport, Richard",
+    "elo": 2742.0,
     "initial_rank": 13
   },
   {
-    "id": 14,
-    "name": "Shakhriyar Mamedyarov",
-    "elo": 2742,
+    "id": 3503240,
+    "name": "Dominguez Perez, Leinier",
+    "elo": 2738.0,
     "initial_rank": 14
   },
   {
-    "id": 15,
-    "name": "Richard Rapport",
-    "elo": 2740,
+    "id": 623539,
+    "name": "Vachier-Lagrave, Maxime",
+    "elo": 2734.8,
     "initial_rank": 15
   },
   {
-    "id": 16,
-    "name": "Maxime Vachier-Lagrave",
-    "elo": 2740,
+    "id": 8603677,
+    "name": "Ding, Liren",
+    "elo": 2734.0,
     "initial_rank": 16
   },
   {
-    "id": 17,
-    "name": "Leinier Dominguez Perez",
-    "elo": 2738,
+    "id": 4168119,
+    "name": "Nepomniachtchi, Ian",
+    "elo": 2732.0,
     "initial_rank": 17
   },
   {
-    "id": 18,
-    "name": "Ding Liren",
-    "elo": 2734,
+    "id": 14204118,
+    "name": "Abdusattorov, Nodirbek",
+    "elo": 2731.6,
     "initial_rank": 18
   },
   {
-    "id": 19,
-    "name": "Ian Nepomniachtchi",
-    "elo": 2732,
+    "id": 12401137,
+    "name": "Le, Quang Liem",
+    "elo": 2731.2,
     "initial_rank": 19
   },
   {
-    "id": 20,
-    "name": "Le Quang Liem",
-    "elo": 2729,
+    "id": 13401319,
+    "name": "Mamedyarov, Shakhriyar",
+    "elo": 2729.6,
     "initial_rank": 20
   },
   {
-    "id": 21,
-    "name": "Jan-Krzysztof Duda",
-    "elo": 2729,
+    "id": 13300474,
+    "name": "Aronian, Levon",
+    "elo": 2729.4,
     "initial_rank": 21
   },
   {
-    "id": 22,
-    "name": "Levon Aronian",
-    "elo": 2728,
+    "id": 2093596,
+    "name": "Niemann, Hans Moke",
+    "elo": 2729.0,
     "initial_rank": 22
   },
   {
-    "id": 23,
-    "name": "Yu Yangyi",
-    "elo": 2726,
+    "id": 1170546,
+    "name": "Duda, Jan-Krzysztof",
+    "elo": 2729.0,
     "initial_rank": 23
   },
   {
-    "id": 24,
-    "name": "Vladimir Fedoseev",
-    "elo": 2717,
+    "id": 8603820,
+    "name": "Yu, Yangyi",
+    "elo": 2726.0,
     "initial_rank": 24
   },
   {
-    "id": 25,
-    "name": "Vidit Gujrathi",
-    "elo": 2715,
+    "id": 14205483,
+    "name": "Sindarov, Javokhir",
+    "elo": 2721.0,
     "initial_rank": 25
   },
   {
-    "id": 26,
-    "name": "Dmitry Andreikin",
-    "elo": 2710,
+    "id": 24130737,
+    "name": "Fedoseev, Vladimir",
+    "elo": 2717.0,
     "initial_rank": 26
   },
   {
-    "id": 27,
-    "name": "Nihal Sarin",
-    "elo": 2704,
+    "id": 5029465,
+    "name": "Vidit, Santosh Gujrathi",
+    "elo": 2715.0,
     "initial_rank": 27
   },
   {
-    "id": 28,
-    "name": "Parham Maghsoodloo",
-    "elo": 2701,
+    "id": 5072786,
+    "name": "Aravindh, Chithambaram VR.",
+    "elo": 2712.0,
     "initial_rank": 28
   },
   {
-    "id": 29,
-    "name": "Awonder Liang",
-    "elo": 2701,
+    "id": 4158814,
+    "name": "Andreikin, Dmitry",
+    "elo": 2710.0,
     "initial_rank": 29
   },
   {
-    "id": 30,
-    "name": "Sam Sevian",
-    "elo": 2701,
+    "id": 25092340,
+    "name": "Nihal Sarin",
+    "elo": 2704.0,
     "initial_rank": 30
   },
   {
-    "id": 31,
-    "name": "Jorden van Foreest",
-    "elo": 2693,
+    "id": 2056437,
+    "name": "Liang, Awonder",
+    "elo": 2701.0,
     "initial_rank": 31
   },
   {
-    "id": 32,
-    "name": "Teimour Radjabov",
-    "elo": 2692,
+    "id": 2040506,
+    "name": "Sevian, Samuel",
+    "elo": 2701.0,
     "initial_rank": 32
   },
   {
-    "id": 33,
-    "name": "Harikrishna Pentala",
-    "elo": 2690,
+    "id": 12539929,
+    "name": "Maghsoodloo, Parham",
+    "elo": 2701.0,
     "initial_rank": 33
   },
   {
-    "id": 34,
-    "name": "Nodirbek Yakubboev",
-    "elo": 2689,
+    "id": 1039784,
+    "name": "Van Foreest, Jorden",
+    "elo": 2693.0,
     "initial_rank": 34
   },
   {
-    "id": 35,
-    "name": "Wang Hao",
-    "elo": 2687,
+    "id": 13400924,
+    "name": "Radjabov, Teimour",
+    "elo": 2692.0,
     "initial_rank": 35
   },
   {
-    "id": 36,
-    "name": "Peter Svidler",
-    "elo": 2682,
+    "id": 5007003,
+    "name": "Harikrishna, Pentala",
+    "elo": 2690.0,
     "initial_rank": 36
   },
   {
-    "id": 37,
-    "name": "Andrey Esipenko",
-    "elo": 2681,
+    "id": 14203987,
+    "name": "Yakubboev, Nodirbek",
+    "elo": 2689.0,
     "initial_rank": 37
   },
   {
-    "id": 38,
-    "name": "Amin Tabatabaei",
-    "elo": 2681,
+    "id": 8602883,
+    "name": "Wang, Hao",
+    "elo": 2687.0,
     "initial_rank": 38
   },
   {
-    "id": 39,
-    "name": "Matthias Bluebaum",
-    "elo": 2680,
+    "id": 14117908,
+    "name": "Kovalenko, Igor",
+    "elo": 2684.0,
     "initial_rank": 39
   },
   {
-    "id": 40,
-    "name": "Alexey Sarana",
-    "elo": 2675,
+    "id": 4102142,
+    "name": "Svidler, Peter",
+    "elo": 2682.0,
     "initial_rank": 40
   },
   {
-    "id": 41,
-    "name": "Daniil Dubov",
-    "elo": 2674,
+    "id": 24175439,
+    "name": "Esipenko, Andrey",
+    "elo": 2681.0,
     "initial_rank": 41
   },
   {
-    "id": 42,
-    "name": "Rustam Kasimdzhanov",
-    "elo": 2671,
+    "id": 12521213,
+    "name": "Tabatabaei, M. Amin",
+    "elo": 2681.0,
     "initial_rank": 42
   },
   {
-    "id": 43,
-    "name": "David Howell",
-    "elo": 2668,
+    "id": 24651516,
+    "name": "Bluebaum, Matthias",
+    "elo": 2680.0,
     "initial_rank": 43
   },
   {
-    "id": 44,
-    "name": "Bu Xiangzhi",
-    "elo": 2667,
+    "id": 24133795,
+    "name": "Sarana, Alexey",
+    "elo": 2675.0,
     "initial_rank": 44
   },
   {
-    "id": 45,
-    "name": "Kirill Alekseenko",
-    "elo": 2666,
+    "id": 24126055,
+    "name": "Dubov, Daniil",
+    "elo": 2674.0,
     "initial_rank": 45
   },
   {
-    "id": 46,
-    "name": "Shant Sargsyan",
-    "elo": 2664,
+    "id": 14200244,
+    "name": "Kasimdzhanov, Rustam",
+    "elo": 2671.0,
     "initial_rank": 46
   },
   {
-    "id": 47,
-    "name": "Karthikeyan Murali",
-    "elo": 2662,
+    "id": 410608,
+    "name": "Howell, David W L",
+    "elo": 2668.0,
     "initial_rank": 47
   },
   {
-    "id": 48,
-    "name": "Nils Grandelius",
-    "elo": 2661,
+    "id": 8601445,
+    "name": "Bu, Xiangzhi",
+    "elo": 2667.0,
     "initial_rank": 48
   },
   {
-    "id": 49,
-    "name": "Radoslaw Wojtaszek",
-    "elo": 2660,
+    "id": 4135539,
+    "name": "Alekseenko, Kirill",
+    "elo": 2666.0,
     "initial_rank": 49
   },
   {
-    "id": 50,
-    "name": "Grigoriy Oparin",
-    "elo": 2660,
+    "id": 13306766,
+    "name": "Sargsyan, Shant",
+    "elo": 2664.0,
     "initial_rank": 50
   },
   {
-    "id": 51,
-    "name": "Player_51",
-    "elo": 2660,
+    "id": 5074452,
+    "name": "Karthikeyan, Murali",
+    "elo": 2662.0,
     "initial_rank": 51
   },
   {
-    "id": 52,
-    "name": "Player_52",
-    "elo": 2659,
+    "id": 1710400,
+    "name": "Grandelius, Nils",
+    "elo": 2661.0,
     "initial_rank": 52
   },
   {
-    "id": 53,
-    "name": "Player_53",
-    "elo": 2659,
+    "id": 1512668,
+    "name": "Christiansen, Johan-Sebastian",
+    "elo": 2661.0,
     "initial_rank": 53
   },
   {
-    "id": 54,
-    "name": "Player_54",
-    "elo": 2658,
+    "id": 24125890,
+    "name": "Oparin, Grigoriy",
+    "elo": 2660.0,
     "initial_rank": 54
   },
   {
-    "id": 55,
-    "name": "Player_55",
-    "elo": 2658,
+    "id": 703303,
+    "name": "Leko, Peter",
+    "elo": 2660.0,
     "initial_rank": 55
   },
   {
-    "id": 56,
-    "name": "Player_56",
-    "elo": 2658,
+    "id": 14508150,
+    "name": "Saric, Ivan",
+    "elo": 2660.0,
     "initial_rank": 56
   },
   {
-    "id": 57,
-    "name": "Player_57",
-    "elo": 2657,
+    "id": 1118358,
+    "name": "Wojtaszek, Radoslaw",
+    "elo": 2660.0,
     "initial_rank": 57
   },
   {
-    "id": 58,
-    "name": "Player_58",
-    "elo": 2657,
+    "id": 2023970,
+    "name": "Robson, Ray",
+    "elo": 2657.0,
     "initial_rank": 58
   },
   {
-    "id": 59,
-    "name": "Player_59",
-    "elo": 2656,
+    "id": 4152956,
+    "name": "Vitiugov, Nikita",
+    "elo": 2657.0,
     "initial_rank": 59
   },
   {
-    "id": 60,
-    "name": "Player_60",
-    "elo": 2656,
+    "id": 4262875,
+    "name": "Theodorou, Nikolas",
+    "elo": 2656.0,
     "initial_rank": 60
   },
   {
-    "id": 61,
-    "name": "Player_61",
-    "elo": 2656,
+    "id": 14102951,
+    "name": "Eljanov, Pavel",
+    "elo": 2656.0,
     "initial_rank": 61
   },
   {
-    "id": 62,
-    "name": "Player_62",
-    "elo": 2655,
+    "id": 1226380,
+    "name": "Deac, Bogdan-Daniel",
+    "elo": 2655.0,
     "initial_rank": 62
   },
   {
-    "id": 63,
-    "name": "Player_63",
-    "elo": 2655,
+    "id": 409561,
+    "name": "Maroroa Jones, Gawain C B",
+    "elo": 2655.0,
     "initial_rank": 63
   },
   {
-    "id": 64,
-    "name": "Player_64",
-    "elo": 2654,
+    "id": 44155573,
+    "name": "Murzin, Volodar",
+    "elo": 2655.0,
     "initial_rank": 64
   },
   {
-    "id": 65,
-    "name": "Player_65",
-    "elo": 2654,
+    "id": 4126025,
+    "name": "Grischuk, Alexander",
+    "elo": 2654.0,
     "initial_rank": 65
   },
   {
-    "id": 66,
-    "name": "Player_66",
-    "elo": 2654,
+    "id": 4162722,
+    "name": "Inarkiev, Ernesto",
+    "elo": 2653.0,
     "initial_rank": 66
   },
   {
-    "id": 67,
-    "name": "Player_67",
-    "elo": 2653,
+    "id": 358878,
+    "name": "Nguyen, Thai Dai Van",
+    "elo": 2652.0,
     "initial_rank": 67
   },
   {
-    "id": 68,
-    "name": "Player_68",
-    "elo": 2653,
+    "id": 44599790,
+    "name": "Erdogmus, Yagiz Kaan",
+    "elo": 2651.0,
     "initial_rank": 68
   },
   {
-    "id": 69,
-    "name": "Player_69",
-    "elo": 2652,
+    "id": 4116992,
+    "name": "Morozevich, Alexander",
+    "elo": 2650.0,
     "initial_rank": 69
   },
   {
-    "id": 70,
-    "name": "Player_70",
-    "elo": 2652,
+    "id": 2004887,
+    "name": "Shankland, Sam",
+    "elo": 2649.0,
     "initial_rank": 70
   },
   {
-    "id": 71,
-    "name": "Player_71",
-    "elo": 2652,
+    "id": 2047640,
+    "name": "Xiong, Jeffery",
+    "elo": 2649.0,
     "initial_rank": 71
   },
   {
-    "id": 72,
-    "name": "Player_72",
-    "elo": 2651,
+    "id": 2285525,
+    "name": "Anton Guijarro, David",
+    "elo": 2648.0,
     "initial_rank": 72
   },
   {
-    "id": 73,
-    "name": "Player_73",
-    "elo": 2651,
+    "id": 309095,
+    "name": "Navara, David",
+    "elo": 2648.0,
     "initial_rank": 73
   },
   {
-    "id": 74,
-    "name": "Player_74",
-    "elo": 2650,
+    "id": 44507356,
+    "name": "Gurel, Ediz",
+    "elo": 2648.0,
     "initial_rank": 74
   },
   {
-    "id": 75,
-    "name": "Player_75",
-    "elo": 2650,
+    "id": 712779,
+    "name": "Gledura, Benjamin",
+    "elo": 2647.0,
     "initial_rank": 75
   },
   {
-    "id": 76,
-    "name": "Player_76",
-    "elo": 2650,
+    "id": 13401653,
+    "name": "Mamedov, Rauf",
+    "elo": 2646.0,
     "initial_rank": 76
   },
   {
-    "id": 77,
-    "name": "Player_77",
-    "elo": 2649,
+    "id": 13402129,
+    "name": "Safarli, Eltaj",
+    "elo": 2644.0,
     "initial_rank": 77
   },
   {
-    "id": 78,
-    "name": "Player_78",
-    "elo": 2649,
+    "id": 3805662,
+    "name": "Martinez Alcantara, Jose Eduardo",
+    "elo": 2644.0,
     "initial_rank": 78
   },
   {
-    "id": 79,
-    "name": "Player_79",
-    "elo": 2648,
+    "id": 2205530,
+    "name": "Vallejo Pons, Francisco",
+    "elo": 2644.0,
     "initial_rank": 79
   },
   {
-    "id": 80,
-    "name": "Player_80",
-    "elo": 2648,
+    "id": 8603332,
+    "name": "Lu, Shanglei",
+    "elo": 2643.0,
     "initial_rank": 80
   },
   {
-    "id": 81,
-    "name": "Player_81",
-    "elo": 2648,
+    "id": 30920019,
+    "name": "Mishra, Abhimanyu",
+    "elo": 2642.0,
     "initial_rank": 81
   },
   {
-    "id": 82,
-    "name": "Player_82",
-    "elo": 2647,
+    "id": 24603295,
+    "name": "Donchenko, Alexander",
+    "elo": 2641.0,
     "initial_rank": 82
   },
   {
-    "id": 83,
-    "name": "Player_83",
-    "elo": 2647,
+    "id": 25060783,
+    "name": "Pranav, V",
+    "elo": 2641.0,
     "initial_rank": 83
   },
   {
-    "id": 84,
-    "name": "Player_84",
-    "elo": 2646,
+    "id": 35093487,
+    "name": "Sadhwani, Raunak",
+    "elo": 2641.0,
     "initial_rank": 84
   },
   {
-    "id": 85,
-    "name": "Player_85",
-    "elo": 2646,
+    "id": 12923044,
+    "name": "Svane, Frederik",
+    "elo": 2640.0,
     "initial_rank": 85
   },
   {
-    "id": 86,
-    "name": "Player_86",
-    "elo": 2646,
+    "id": 14204223,
+    "name": "Vokhidov, Shamsiddin",
+    "elo": 2640.0,
     "initial_rank": 86
   },
   {
-    "id": 87,
-    "name": "Player_87",
-    "elo": 2645,
+    "id": 14103320,
+    "name": "Ponomariov, Ruslan",
+    "elo": 2639.0,
     "initial_rank": 87
   },
   {
-    "id": 88,
-    "name": "Player_88",
-    "elo": 2645,
+    "id": 24101605,
+    "name": "Artemiev, Vladislav",
+    "elo": 2637.0,
     "initial_rank": 88
   },
   {
-    "id": 89,
-    "name": "Player_89",
-    "elo": 2644,
+    "id": 911925,
+    "name": "Indjic, Aleksandar",
+    "elo": 2635.0,
     "initial_rank": 89
   },
   {
-    "id": 90,
-    "name": "Player_90",
-    "elo": 2644,
+    "id": 400041,
+    "name": "Adams, Michael",
+    "elo": 2635.0,
     "initial_rank": 90
   },
   {
-    "id": 91,
-    "name": "Player_91",
-    "elo": 2644,
+    "id": 1444948,
+    "name": "Bjerre, Jonas Buhl",
+    "elo": 2634.0,
     "initial_rank": 91
   },
   {
-    "id": 92,
-    "name": "Player_92",
-    "elo": 2643,
+    "id": 4120787,
+    "name": "Malakhov, Vladimir",
+    "elo": 2634.0,
     "initial_rank": 92
   },
   {
-    "id": 93,
-    "name": "Player_93",
-    "elo": 2643,
+    "id": 2805677,
+    "name": "Gelfand, Boris",
+    "elo": 2633.0,
     "initial_rank": 93
   },
   {
-    "id": 94,
-    "name": "Player_94",
-    "elo": 2642,
+    "id": 1510045,
+    "name": "Tari, Aryan",
+    "elo": 2631.0,
     "initial_rank": 94
   },
   {
-    "id": 95,
-    "name": "Player_95",
-    "elo": 2642,
+    "id": 1007998,
+    "name": "L'Ami, Erwin",
+    "elo": 2630.0,
     "initial_rank": 95
   },
   {
-    "id": 96,
-    "name": "Player_96",
-    "elo": 2642,
+    "id": 35028600,
+    "name": "Pranesh M",
+    "elo": 2630.0,
     "initial_rank": 96
   },
   {
-    "id": 97,
-    "name": "Player_97",
-    "elo": 2641,
+    "id": 13302507,
+    "name": "Hovhannisyan, Robert",
+    "elo": 2629.0,
     "initial_rank": 97
   },
   {
-    "id": 98,
-    "name": "Player_98",
-    "elo": 2641,
+    "id": 4108116,
+    "name": "Chigaev, Maksim",
+    "elo": 2628.0,
     "initial_rank": 98
   },
   {
-    "id": 99,
-    "name": "Player_99",
-    "elo": 2640,
+    "id": 10601457,
+    "name": "Amin, Bassem",
+    "elo": 2628.0,
     "initial_rank": 99
   },
   {
-    "id": 100,
-    "name": "Player_100",
-    "elo": 2640,
+    "id": 12909572,
+    "name": "Kollars, Dmitrij",
+    "elo": 2628.0,
     "initial_rank": 100
   }
 ]

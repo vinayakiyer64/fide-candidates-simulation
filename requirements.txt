@@ -1,0 +1,7 @@
+# Core simulation (no external dependencies)
+# All simulation code uses only the Python standard library
+
+# For scraping player data (optional)
+requests>=2.25.0
+beautifulsoup4>=4.9.0
+
