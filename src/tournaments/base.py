@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Set
 from src.entities import Player, PlayerPool
 
 class Tournament(ABC):
@@ -23,12 +23,15 @@ class Tournament(ABC):
         self.num_qualifiers = num_qualifiers
 
     @abstractmethod
-    def get_qualifiers(self) -> List[Player]:
+    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
         """
         Run the tournament simulation and return the qualifiers.
+
+        Args:
+            excluded_ids (Set[int], optional): IDs of players who are ineligible to qualify
+                                               (e.g., already qualified). Defaults to None.
 
         Returns:
             List[Player]: The list of players who qualified.
         """
         pass
-

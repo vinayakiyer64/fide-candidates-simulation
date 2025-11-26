@@ -1,5 +1,6 @@
 import random
 import math
+from typing import Tuple
 
 def elo_expected_score(ra: float, rb: float) -> float:
     """
@@ -54,3 +55,20 @@ def game_outcome_with_draws(ra: float,
         return 0.5
     else:
         return 0.0
+
+def update_ratings(ra: float, rb: float, result: float, k_factor: float = 10.0) -> Tuple[float, float]:
+    """
+    Update ratings for two players after a game.
+
+    Args:
+        ra (float): Rating of player A.
+        rb (float): Rating of player B.
+        result (float): Actual score for player A (1.0, 0.5, or 0.0).
+        k_factor (float, optional): K-factor for rating updates. Defaults to 10.0.
+
+    Returns:
+        Tuple[float, float]: New ratings (ra_new, rb_new).
+    """
+    expected_a = elo_expected_score(ra, rb)
+    change = k_factor * (result - expected_a)
+    return ra + change, rb - change

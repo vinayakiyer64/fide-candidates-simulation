@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Type
+from typing import List, Dict, Optional, Set
 from collections import Counter
 import random
 import math
@@ -15,25 +15,11 @@ class QualificationConfig:
     """
     Configuration for a qualification season.
     
-    Now modular: allows specifying a list of tournament classes/factories to run.
-    
     Attributes:
-        tournaments (List[Type[Tournament]]): List of tournament classes or instances to run.
-        rating_spots (int): Number of spots allocated purely by rating.
+        tournament_configs (List[Dict]): List of tournament configs (type, spots, kwargs).
+        num_rating_spots (int): Number of spots allocated purely by rating.
     """
-    # Dictionary mapping a unique key (e.g. 'world_cup') to a tuple of (TournamentClass, kwargs)
-    # This allows generic instantiation.
-    # For simplicity in this iteration, we can stick to a structured list of "Tournament definitions"
-    
-    # New design: A list of (TournamentFactory, num_spots) tuples?
-    # Or keep it simple: The config object holds the counts, but the Simulator class is generic.
-    
-    # Let's make it data-driven.
-    # The simulator will iterate over a list of configured tournaments.
-    
     tournament_configs: List[Dict] = field(default_factory=list)
-    # Example: [{"type": "world_cup", "spots": 3, "kwargs": {...}}, ...]
-    
     num_rating_spots: int = 1
 
 
@@ -52,13 +38,12 @@ class QualificationSimulator:
             players (PlayerPool): The pool of all players.
             config (QualificationConfig): The qualification rules.
         """
-        # Players sorted by Elo descending (needed for rating spots)
-        self.players = sorted(players, key=lambda p: p.elo, reverse=True)
+        self.players = players
         self.config = config
 
     def rating_qualifiers(self, already_qualified_ids: Set[int]) -> List[Player]:
         """
-        Select qualifiers based on Rating, skipping those who already qualified.
+        Select qualifiers based on FINAL live rating, skipping those who already qualified.
 
         Args:
             already_qualified_ids (Set[int]): IDs of players who already qualified.
@@ -66,8 +51,11 @@ class QualificationSimulator:
         Returns:
             List[Player]: List of players qualifying by rating.
         """
+        # Sort by current (live) Elo
+        sorted_by_live = sorted(self.players, key=lambda p: p.elo, reverse=True)
+        
         qualifiers = []
-        for p in self.players:
+        for p in sorted_by_live:
             if p.id in already_qualified_ids:
                 continue
             qualifiers.append(p)
@@ -109,7 +97,10 @@ class QualificationSimulator:
                 continue
 
             tournament = self._create_tournament(t_type, spots, **kwargs)
-            t_qualifiers = tournament.get_qualifiers()
+            
+            # Pass excluded_ids so the tournament skips already qualified players
+            # and fills its quota with the next eligible players.
+            t_qualifiers = tournament.get_qualifiers(excluded_ids=qualified_ids)
             
             for p in t_qualifiers:
                 if p.id not in qualified_ids:
@@ -117,14 +108,11 @@ class QualificationSimulator:
                     qualifiers.append(p)
 
         # Rating Spots (always last to fill gaps)
+        # Uses the players' LIVE Elo which has been updated by the tournaments above.
         if self.config.num_rating_spots > 0:
             rating_qualifiers = self.rating_qualifiers(qualified_ids)
             qualifiers.extend(rating_qualifiers)
 
-        # Ensure we have at most 8 for Candidates (or whatever the target is)
-        # In a real scenario, if a spot is unused, it goes to rating.
-        # Our logic effectively handles this by checking 'already_qualified_ids'
-        # inside rating_qualifiers, but we should clamp to 8 explicitly if required.
         return qualifiers[:8]
 
 
@@ -147,23 +135,39 @@ def run_monte_carlo(players: PlayerPool,
     if seed is not None:
         random.seed(seed)
 
-    qual_sim = QualificationSimulator(players, config)
-
     qual_counts = Counter()
     elo_sums = 0.0
     elo_sums_sq = 0.0
     total_seasons_with_full_8 = 0
 
     for _ in range(num_seasons):
+        # CRITICAL: Deep copy players for each season so Elo updates don't persist
+        # across seasons. We want each season to start fresh.
+        season_players = [p.clone() for p in players]
+        
+        qual_sim = QualificationSimulator(season_players, config)
         quals = qual_sim.simulate_one_season()
+        
         if len(quals) < 1:
             continue
         
-        # Only count statistics if we actually filled the spots (mostly relevant for small pools)
-        # But for robust stats we count all valid seasons.
         total_seasons_with_full_8 += 1
         
-        avg_elo = sum(p.elo for p in quals) / len(quals)
+        # Use initial_rank or initial_elo to evaluate "True Strength" of qualifiers?
+        # Usually fairness is measured against "True Strength" (Start of season Elo).
+        # So we should probably sum the INITIAL Elo of qualifiers to measure quality.
+        # But 'quals' contains Modified Player objects.
+        # We need to look up their initial stats.
+        
+        # Wait, p.elo in 'quals' is the END of season Elo.
+        # Fairness is: "Did the best players (at start) qualify?"
+        # We should track based on ID.
+        
+        # Let's use the ID to lookup the ORIGINAL player for stats.
+        # Creating a map for fast lookup
+        original_map = {p.id: p for p in players}
+        
+        avg_elo = sum(original_map[p.id].elo for p in quals) / len(quals)
         elo_sums += avg_elo
         elo_sums_sq += avg_elo ** 2
         for p in quals:
@@ -182,7 +186,7 @@ def run_monte_carlo(players: PlayerPool,
     mean_avg_elo = elo_sums / total_seasons_with_full_8
     var_avg_elo = (elo_sums_sq / total_seasons_with_full_8) - mean_avg_elo ** 2
 
-    # Correlation between Elo rank and qualification probability (approx)
+    # Correlation between Elo rank and qualification probability
     ranks = [p.initial_rank for p in players]
     probs = [qual_probs[p.id] for p in players]
     

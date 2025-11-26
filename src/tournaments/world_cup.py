@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Set
 import random
 
 from src.entities import Player, PlayerPool
-from src.game_logic import game_outcome_with_draws, elo_expected_score
+from src.game_logic import game_outcome_with_draws, elo_expected_score, update_ratings
 from src.utils import weighted_sample
 from src.tournaments.base import Tournament
 
@@ -35,7 +35,7 @@ class WorldCupSimulator(Tournament):
 
     def simulate_match(self, a: Player, b: Player) -> Player:
         """
-        Simulate a match between two players.
+        Simulate a match between two players, updating their Elos.
 
         Args:
             a (Player): First player.
@@ -46,8 +46,17 @@ class WorldCupSimulator(Tournament):
         """
         score_a = 0.0
         score_b = 0.0
+        
+        # K-factor for World Cup (Knockout usually has higher K or standard 10/20)
+        # We use K=10 for classical portion simulation
+        K = 10.0
+
         for _ in range(self.games_per_match):
             res = game_outcome_with_draws(a.elo, b.elo)
+            
+            # Update Ratings
+            a.elo, b.elo = update_ratings(a.elo, b.elo, res, k_factor=K)
+
             if res == 1.0:
                 score_a += 1.0
             elif res == 0.5:
@@ -62,6 +71,7 @@ class WorldCupSimulator(Tournament):
             return b
         
         # Tiebreak: assume higher Elo has slight edge
+        # We don't update ratings for tiebreaks (usually rapid/blitz)
         ea = elo_expected_score(a.elo, b.elo)
         if random.random() < ea:
             return a
@@ -76,8 +86,6 @@ class WorldCupSimulator(Tournament):
             List[Player]: Players sorted by finishing position (Winner, Runner-up, etc.)
         """
         # Choose field_size players, biased to include stronger players more often
-        # In reality, WC spots are allocated by rating + continental qualifiers. 
-        # We use a weighted sample to approximate "mostly strong players get in".
         field = weighted_sample(self.players,
                                 min(self.field_size, len(self.players)),
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2500) / 100.0)
@@ -109,13 +117,26 @@ class WorldCupSimulator(Tournament):
         positions_sorted = positions[::-1]  # champion first
         return positions_sorted
 
-    def get_qualifiers(self) -> List[Player]:
+    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
         """
-        Run the tournament and return the top `num_qualifiers` players.
+        Run the tournament and return the top eligible players.
+
+        Args:
+            excluded_ids (Set[int], optional): Players ineligible to qualify.
 
         Returns:
             List[Player]: The qualified players.
         """
+        if excluded_ids is None:
+            excluded_ids = set()
+            
         standings = self.simulate_tournament()
-        # Take top num_qualifiers distinct players
-        return standings[:self.num_qualifiers]
+        
+        qualifiers = []
+        for p in standings:
+            if p.id not in excluded_ids:
+                qualifiers.append(p)
+                if len(qualifiers) >= self.num_qualifiers:
+                    break
+                    
+        return qualifiers

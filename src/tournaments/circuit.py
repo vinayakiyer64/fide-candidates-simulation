@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Set
 from collections import defaultdict
 
 from src.entities import Player, PlayerPool
@@ -72,6 +72,8 @@ class FideCircuitSimulator(Tournament):
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2600) / 200.0)
 
         # Run a Swiss-like tournament (or Round Robin approximated as Swiss)
+        # We reuse GrandSwissSimulator logic for individual events.
+        # Note: This WILL update ratings because GrandSwissSimulator now updates ratings.
         swiss = GrandSwissSimulator(field, num_qualifiers=0,
                                     field_size=len(field),
                                     rounds=event.rounds)
@@ -96,13 +98,19 @@ class FideCircuitSimulator(Tournament):
 
         return points
 
-    def get_qualifiers(self) -> List[Player]:
+    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
         """
         Simulate the full circuit and return qualifiers.
+
+        Args:
+            excluded_ids (Set[int], optional): Players ineligible to qualify.
 
         Returns:
             List[Player]: The qualified players based on total circuit points.
         """
+        if excluded_ids is None:
+            excluded_ids = set()
+
         total_points = defaultdict(float)
 
         for event in self.tournaments:
@@ -111,6 +119,7 @@ class FideCircuitSimulator(Tournament):
                 total_points[pid] += pts
 
         # Sort players by points then Elo
+        # Note: 'p.elo' here is the LIVE elo after all events
         scored_players = [(p, total_points[p.id]) for p in self.players if total_points[p.id] > 0]
         if not scored_players:
             return []
@@ -118,11 +127,9 @@ class FideCircuitSimulator(Tournament):
         scored_players.sort(key=lambda x: (x[1], x[0].elo), reverse=True)
 
         qualifiers = []
-        used_ids = set()
         for p, pts in scored_players:
-            if p.id not in used_ids:
+            if p.id not in excluded_ids:
                 qualifiers.append(p)
-                used_ids.add(p.id)
-            if len(qualifiers) >= self.num_qualifiers:
-                break
+                if len(qualifiers) >= self.num_qualifiers:
+                    break
         return qualifiers

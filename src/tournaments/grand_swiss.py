@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import List, Tuple, Set
 from collections import defaultdict
 import random
 
 from src.entities import Player, PlayerPool
-from src.game_logic import game_outcome_with_draws
+from src.game_logic import game_outcome_with_draws, update_ratings
 from src.utils import weighted_sample
 from src.tournaments.base import Tournament
 
@@ -47,6 +47,8 @@ class GrandSwissSimulator(Tournament):
                                 weight_fn=lambda p: 1.0 + max(0, p.elo - 2500) / 100.0)
 
         scores = {p.id: 0.0 for p in field}
+        
+        K = 10.0 # K-factor for Swiss
 
         for _ in range(self.rounds):
             # Group by score (approximate Swiss pairings)
@@ -62,12 +64,16 @@ class GrandSwissSimulator(Tournament):
                 # (Simplified pairing: ignores colors and past opponents)
                 for i in range(0, len(group_players), 2):
                     if i + 1 >= len(group_players):
-                        # Bye: assign half point
+                        # Bye: assign half point, no rating change
                         new_scores[group_players[i].id] += 0.5
                         continue
                     a = group_players[i]
                     b = group_players[i+1]
                     res = game_outcome_with_draws(a.elo, b.elo)
+                    
+                    # Update Ratings
+                    a.elo, b.elo = update_ratings(a.elo, b.elo, res, k_factor=K)
+                    
                     if res == 1.0:
                         new_scores[a.id] += 1.0
                     elif res == 0.5:
@@ -83,12 +89,26 @@ class GrandSwissSimulator(Tournament):
                            reverse=True)
         return [(p, scores[p.id]) for p in standings]
 
-    def get_qualifiers(self) -> List[Player]:
+    def get_qualifiers(self, excluded_ids: Set[int] = None) -> List[Player]:
         """
-        Run the tournament and return the top `num_qualifiers` players.
+        Run the tournament and return the top eligible players.
+
+        Args:
+            excluded_ids (Set[int], optional): Players ineligible to qualify.
 
         Returns:
             List[Player]: The qualified players.
         """
+        if excluded_ids is None:
+            excluded_ids = set()
+            
         standings = self.simulate_tournament()
-        return [p for p, s in standings[:self.num_qualifiers]]
+        
+        qualifiers = []
+        for p, score in standings:
+            if p.id not in excluded_ids:
+                qualifiers.append(p)
+                if len(qualifiers) >= self.num_qualifiers:
+                    break
+                    
+        return qualifiers
