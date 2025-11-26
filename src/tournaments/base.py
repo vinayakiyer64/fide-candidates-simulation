@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from ..entities import Player, PlayerPool
+from src.entities import Player, PlayerPool
 
 class Tournament(ABC):
     """

@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from typing import List, Dict
 from collections import defaultdict
 
-from ..entities import Player, PlayerPool
-from ..utils import weighted_sample
-from .base import Tournament
-from .grand_swiss import GrandSwissSimulator
+from src.entities import Player, PlayerPool
+from src.utils import weighted_sample
+from src.tournaments.base import Tournament
+from src.tournaments.grand_swiss import GrandSwissSimulator
 
 @dataclass
 class CircuitTournament:

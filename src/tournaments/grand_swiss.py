@@ -2,10 +2,10 @@ from typing import List, Tuple
 from collections import defaultdict
 import random
 
-from ..entities import Player, PlayerPool
-from ..game_logic import game_outcome_with_draws
-from ..utils import weighted_sample
-from .base import Tournament
+from src.entities import Player, PlayerPool
+from src.game_logic import game_outcome_with_draws
+from src.utils import weighted_sample
+from src.tournaments.base import Tournament
 
 class GrandSwissSimulator(Tournament):
     """

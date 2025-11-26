@@ -4,11 +4,11 @@ from collections import Counter
 import random
 import math
 
-from .entities import Player, PlayerPool
-from .tournaments.base import Tournament
-from .tournaments.world_cup import WorldCupSimulator
-from .tournaments.grand_swiss import GrandSwissSimulator
-from .tournaments.circuit import FideCircuitSimulator
+from src.entities import Player, PlayerPool
+from src.tournaments.base import Tournament
+from src.tournaments.world_cup import WorldCupSimulator
+from src.tournaments.grand_swiss import GrandSwissSimulator
+from src.tournaments.circuit import FideCircuitSimulator
 
 @dataclass
 class QualificationConfig:

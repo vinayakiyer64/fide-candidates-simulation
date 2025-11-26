@@ -1,6 +1,6 @@
 import random
 from typing import List, Callable, Optional, TypeVar
-from .entities import Player, PlayerPool
+from src.entities import Player, PlayerPool
 
 T = TypeVar('T')
 
