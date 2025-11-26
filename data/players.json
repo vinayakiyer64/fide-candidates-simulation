@@ -1,0 +1,602 @@
+[
+  {
+    "id": 1,
+    "name": "Magnus Carlsen",
+    "elo": 2839,
+    "initial_rank": 1
+  },
+  {
+    "id": 2,
+    "name": "Hikaru Nakamura",
+    "elo": 2813,
+    "initial_rank": 2
+  },
+  {
+    "id": 3,
+    "name": "Fabiano Caruana",
+    "elo": 2795,
+    "initial_rank": 3
+  },
+  {
+    "id": 4,
+    "name": "Vincent Keymer",
+    "elo": 2773,
+    "initial_rank": 4
+  },
+  {
+    "id": 5,
+    "name": "Anish Giri",
+    "elo": 2769,
+    "initial_rank": 5
+  },
+  {
+    "id": 6,
+    "name": "Arjun Erigaisi",
+    "elo": 2769,
+    "initial_rank": 6
+  },
+  {
+    "id": 7,
+    "name": "Praggnanandhaa Rameshbabu",
+    "elo": 2768,
+    "initial_rank": 7
+  },
+  {
+    "id": 8,
+    "name": "Wesley So",
+    "elo": 2764,
+    "initial_rank": 8
+  },
+  {
+    "id": 9,
+    "name": "Gukesh Dommaraju",
+    "elo": 2763,
+    "initial_rank": 9
+  },
+  {
+    "id": 10,
+    "name": "Alireza Firouzja",
+    "elo": 2762,
+    "initial_rank": 10
+  },
+  {
+    "id": 11,
+    "name": "Wei Yi",
+    "elo": 2752,
+    "initial_rank": 11
+  },
+  {
+    "id": 12,
+    "name": "Nodirbek Abdusattorov",
+    "elo": 2750,
+    "initial_rank": 12
+  },
+  {
+    "id": 13,
+    "name": "Viswanathan Anand",
+    "elo": 2743,
+    "initial_rank": 13
+  },
+  {
+    "id": 14,
+    "name": "Shakhriyar Mamedyarov",
+    "elo": 2742,
+    "initial_rank": 14
+  },
+  {
+    "id": 15,
+    "name": "Richard Rapport",
+    "elo": 2740,
+    "initial_rank": 15
+  },
+  {
+    "id": 16,
+    "name": "Maxime Vachier-Lagrave",
+    "elo": 2740,
+    "initial_rank": 16
+  },
+  {
+    "id": 17,
+    "name": "Leinier Dominguez Perez",
+    "elo": 2738,
+    "initial_rank": 17
+  },
+  {
+    "id": 18,
+    "name": "Ding Liren",
+    "elo": 2734,
+    "initial_rank": 18
+  },
+  {
+    "id": 19,
+    "name": "Ian Nepomniachtchi",
+    "elo": 2732,
+    "initial_rank": 19
+  },
+  {
+    "id": 20,
+    "name": "Le Quang Liem",
+    "elo": 2729,
+    "initial_rank": 20
+  },
+  {
+    "id": 21,
+    "name": "Jan-Krzysztof Duda",
+    "elo": 2729,
+    "initial_rank": 21
+  },
+  {
+    "id": 22,
+    "name": "Levon Aronian",
+    "elo": 2728,
+    "initial_rank": 22
+  },
+  {
+    "id": 23,
+    "name": "Yu Yangyi",
+    "elo": 2726,
+    "initial_rank": 23
+  },
+  {
+    "id": 24,
+    "name": "Vladimir Fedoseev",
+    "elo": 2717,
+    "initial_rank": 24
+  },
+  {
+    "id": 25,
+    "name": "Vidit Gujrathi",
+    "elo": 2715,
+    "initial_rank": 25
+  },
+  {
+    "id": 26,
+    "name": "Dmitry Andreikin",
+    "elo": 2710,
+    "initial_rank": 26
+  },
+  {
+    "id": 27,
+    "name": "Nihal Sarin",
+    "elo": 2704,
+    "initial_rank": 27
+  },
+  {
+    "id": 28,
+    "name": "Parham Maghsoodloo",
+    "elo": 2701,
+    "initial_rank": 28
+  },
+  {
+    "id": 29,
+    "name": "Awonder Liang",
+    "elo": 2701,
+    "initial_rank": 29
+  },
+  {
+    "id": 30,
+    "name": "Sam Sevian",
+    "elo": 2701,
+    "initial_rank": 30
+  },
+  {
+    "id": 31,
+    "name": "Jorden van Foreest",
+    "elo": 2693,
+    "initial_rank": 31
+  },
+  {
+    "id": 32,
+    "name": "Teimour Radjabov",
+    "elo": 2692,
+    "initial_rank": 32
+  },
+  {
+    "id": 33,
+    "name": "Harikrishna Pentala",
+    "elo": 2690,
+    "initial_rank": 33
+  },
+  {
+    "id": 34,
+    "name": "Nodirbek Yakubboev",
+    "elo": 2689,
+    "initial_rank": 34
+  },
+  {
+    "id": 35,
+    "name": "Wang Hao",
+    "elo": 2687,
+    "initial_rank": 35
+  },
+  {
+    "id": 36,
+    "name": "Peter Svidler",
+    "elo": 2682,
+    "initial_rank": 36
+  },
+  {
+    "id": 37,
+    "name": "Andrey Esipenko",
+    "elo": 2681,
+    "initial_rank": 37
+  },
+  {
+    "id": 38,
+    "name": "Amin Tabatabaei",
+    "elo": 2681,
+    "initial_rank": 38
+  },
+  {
+    "id": 39,
+    "name": "Matthias Bluebaum",
+    "elo": 2680,
+    "initial_rank": 39
+  },
+  {
+    "id": 40,
+    "name": "Alexey Sarana",
+    "elo": 2675,
+    "initial_rank": 40
+  },
+  {
+    "id": 41,
+    "name": "Daniil Dubov",
+    "elo": 2674,
+    "initial_rank": 41
+  },
+  {
+    "id": 42,
+    "name": "Rustam Kasimdzhanov",
+    "elo": 2671,
+    "initial_rank": 42
+  },
+  {
+    "id": 43,
+    "name": "David Howell",
+    "elo": 2668,
+    "initial_rank": 43
+  },
+  {
+    "id": 44,
+    "name": "Bu Xiangzhi",
+    "elo": 2667,
+    "initial_rank": 44
+  },
+  {
+    "id": 45,
+    "name": "Kirill Alekseenko",
+    "elo": 2666,
+    "initial_rank": 45
+  },
+  {
+    "id": 46,
+    "name": "Shant Sargsyan",
+    "elo": 2664,
+    "initial_rank": 46
+  },
+  {
+    "id": 47,
+    "name": "Karthikeyan Murali",
+    "elo": 2662,
+    "initial_rank": 47
+  },
+  {
+    "id": 48,
+    "name": "Nils Grandelius",
+    "elo": 2661,
+    "initial_rank": 48
+  },
+  {
+    "id": 49,
+    "name": "Radoslaw Wojtaszek",
+    "elo": 2660,
+    "initial_rank": 49
+  },
+  {
+    "id": 50,
+    "name": "Grigoriy Oparin",
+    "elo": 2660,
+    "initial_rank": 50
+  },
+  {
+    "id": 51,
+    "name": "Player_51",
+    "elo": 2660,
+    "initial_rank": 51
+  },
+  {
+    "id": 52,
+    "name": "Player_52",
+    "elo": 2659,
+    "initial_rank": 52
+  },
+  {
+    "id": 53,
+    "name": "Player_53",
+    "elo": 2659,
+    "initial_rank": 53
+  },
+  {
+    "id": 54,
+    "name": "Player_54",
+    "elo": 2658,
+    "initial_rank": 54
+  },
+  {
+    "id": 55,
+    "name": "Player_55",
+    "elo": 2658,
+    "initial_rank": 55
+  },
+  {
+    "id": 56,
+    "name": "Player_56",
+    "elo": 2658,
+    "initial_rank": 56
+  },
+  {
+    "id": 57,
+    "name": "Player_57",
+    "elo": 2657,
+    "initial_rank": 57
+  },
+  {
+    "id": 58,
+    "name": "Player_58",
+    "elo": 2657,
+    "initial_rank": 58
+  },
+  {
+    "id": 59,
+    "name": "Player_59",
+    "elo": 2656,
+    "initial_rank": 59
+  },
+  {
+    "id": 60,
+    "name": "Player_60",
+    "elo": 2656,
+    "initial_rank": 60
+  },
+  {
+    "id": 61,
+    "name": "Player_61",
+    "elo": 2656,
+    "initial_rank": 61
+  },
+  {
+    "id": 62,
+    "name": "Player_62",
+    "elo": 2655,
+    "initial_rank": 62
+  },
+  {
+    "id": 63,
+    "name": "Player_63",
+    "elo": 2655,
+    "initial_rank": 63
+  },
+  {
+    "id": 64,
+    "name": "Player_64",
+    "elo": 2654,
+    "initial_rank": 64
+  },
+  {
+    "id": 65,
+    "name": "Player_65",
+    "elo": 2654,
+    "initial_rank": 65
+  },
+  {
+    "id": 66,
+    "name": "Player_66",
+    "elo": 2654,
+    "initial_rank": 66
+  },
+  {
+    "id": 67,
+    "name": "Player_67",
+    "elo": 2653,
+    "initial_rank": 67
+  },
+  {
+    "id": 68,
+    "name": "Player_68",
+    "elo": 2653,
+    "initial_rank": 68
+  },
+  {
+    "id": 69,
+    "name": "Player_69",
+    "elo": 2652,
+    "initial_rank": 69
+  },
+  {
+    "id": 70,
+    "name": "Player_70",
+    "elo": 2652,
+    "initial_rank": 70
+  },
+  {
+    "id": 71,
+    "name": "Player_71",
+    "elo": 2652,
+    "initial_rank": 71
+  },
+  {
+    "id": 72,
+    "name": "Player_72",
+    "elo": 2651,
+    "initial_rank": 72
+  },
+  {
+    "id": 73,
+    "name": "Player_73",
+    "elo": 2651,
+    "initial_rank": 73
+  },
+  {
+    "id": 74,
+    "name": "Player_74",
+    "elo": 2650,
+    "initial_rank": 74
+  },
+  {
+    "id": 75,
+    "name": "Player_75",
+    "elo": 2650,
+    "initial_rank": 75
+  },
+  {
+    "id": 76,
+    "name": "Player_76",
+    "elo": 2650,
+    "initial_rank": 76
+  },
+  {
+    "id": 77,
+    "name": "Player_77",
+    "elo": 2649,
+    "initial_rank": 77
+  },
+  {
+    "id": 78,
+    "name": "Player_78",
+    "elo": 2649,
+    "initial_rank": 78
+  },
+  {
+    "id": 79,
+    "name": "Player_79",
+    "elo": 2648,
+    "initial_rank": 79
+  },
+  {
+    "id": 80,
+    "name": "Player_80",
+    "elo": 2648,
+    "initial_rank": 80
+  },
+  {
+    "id": 81,
+    "name": "Player_81",
+    "elo": 2648,
+    "initial_rank": 81
+  },
+  {
+    "id": 82,
+    "name": "Player_82",
+    "elo": 2647,
+    "initial_rank": 82
+  },
+  {
+    "id": 83,
+    "name": "Player_83",
+    "elo": 2647,
+    "initial_rank": 83
+  },
+  {
+    "id": 84,
+    "name": "Player_84",
+    "elo": 2646,
+    "initial_rank": 84
+  },
+  {
+    "id": 85,
+    "name": "Player_85",
+    "elo": 2646,
+    "initial_rank": 85
+  },
+  {
+    "id": 86,
+    "name": "Player_86",
+    "elo": 2646,
+    "initial_rank": 86
+  },
+  {
+    "id": 87,
+    "name": "Player_87",
+    "elo": 2645,
+    "initial_rank": 87
+  },
+  {
+    "id": 88,
+    "name": "Player_88",
+    "elo": 2645,
+    "initial_rank": 88
+  },
+  {
+    "id": 89,
+    "name": "Player_89",
+    "elo": 2644,
+    "initial_rank": 89
+  },
+  {
+    "id": 90,
+    "name": "Player_90",
+    "elo": 2644,
+    "initial_rank": 90
+  },
+  {
+    "id": 91,
+    "name": "Player_91",
+    "elo": 2644,
+    "initial_rank": 91
+  },
+  {
+    "id": 92,
+    "name": "Player_92",
+    "elo": 2643,
+    "initial_rank": 92
+  },
+  {
+    "id": 93,
+    "name": "Player_93",
+    "elo": 2643,
+    "initial_rank": 93
+  },
+  {
+    "id": 94,
+    "name": "Player_94",
+    "elo": 2642,
+    "initial_rank": 94
+  },
+  {
+    "id": 95,
+    "name": "Player_95",
+    "elo": 2642,
+    "initial_rank": 95
+  },
+  {
+    "id": 96,
+    "name": "Player_96",
+    "elo": 2642,
+    "initial_rank": 96
+  },
+  {
+    "id": 97,
+    "name": "Player_97",
+    "elo": 2641,
+    "initial_rank": 97
+  },
+  {
+    "id": 98,
+    "name": "Player_98",
+    "elo": 2641,
+    "initial_rank": 98
+  },
+  {
+    "id": 99,
+    "name": "Player_99",
+    "elo": 2640,
+    "initial_rank": 99
+  },
+  {
+    "id": 100,
+    "name": "Player_100",
+    "elo": 2640,
+    "initial_rank": 100
+  }
+]
