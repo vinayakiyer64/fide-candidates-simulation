@@ -2,13 +2,13 @@
   {
     "id": 1503014,
     "name": "Carlsen, Magnus",
-    "elo": 2839.7,
+    "elo": 2839.0,
     "initial_rank": 1
   },
   {
     "id": 2016192,
     "name": "Nakamura, Hikaru",
-    "elo": 2810.5,
+    "elo": 2813.0,
     "initial_rank": 2
   },
   {
@@ -20,121 +20,121 @@
   {
     "id": 12940690,
     "name": "Keymer, Vincent",
-    "elo": 2777.6,
+    "elo": 2773.0,
     "initial_rank": 4
+  },
+  {
+    "id": 24116068,
+    "name": "Giri, Anish",
+    "elo": 2769.0,
+    "initial_rank": 5
   },
   {
     "id": 35009192,
     "name": "Erigaisi Arjun",
-    "elo": 2774.6,
-    "initial_rank": 5
-  },
-  {
-    "id": 12573981,
-    "name": "Firouzja, Alireza",
-    "elo": 2762.0,
+    "elo": 2769.0,
     "initial_rank": 6
   },
   {
     "id": 25059530,
     "name": "Praggnanandhaa R",
-    "elo": 2760.8,
+    "elo": 2768.0,
     "initial_rank": 7
-  },
-  {
-    "id": 24116068,
-    "name": "Giri, Anish",
-    "elo": 2760.0,
-    "initial_rank": 8
-  },
-  {
-    "id": 8603405,
-    "name": "Wei, Yi",
-    "elo": 2754.8,
-    "initial_rank": 9
-  },
-  {
-    "id": 46616543,
-    "name": "Gukesh D",
-    "elo": 2754.4,
-    "initial_rank": 10
   },
   {
     "id": 5202213,
     "name": "So, Wesley",
-    "elo": 2753.4,
+    "elo": 2764.0,
+    "initial_rank": 8
+  },
+  {
+    "id": 46616543,
+    "name": "Gukesh D",
+    "elo": 2763.0,
+    "initial_rank": 9
+  },
+  {
+    "id": 12573981,
+    "name": "Firouzja, Alireza",
+    "elo": 2762.0,
+    "initial_rank": 10
+  },
+  {
+    "id": 8603405,
+    "name": "Wei, Yi",
+    "elo": 2752.0,
     "initial_rank": 11
+  },
+  {
+    "id": 14204118,
+    "name": "Abdusattorov, Nodirbek",
+    "elo": 2750.0,
+    "initial_rank": 12
   },
   {
     "id": 5000017,
     "name": "Anand, Viswanathan",
     "elo": 2743.0,
-    "initial_rank": 12
+    "initial_rank": 13
+  },
+  {
+    "id": 13401319,
+    "name": "Mamedyarov, Shakhriyar",
+    "elo": 2742.0,
+    "initial_rank": 14
   },
   {
     "id": 738590,
     "name": "Rapport, Richard",
-    "elo": 2742.0,
-    "initial_rank": 13
+    "elo": 2740.0,
+    "initial_rank": 15
+  },
+  {
+    "id": 623539,
+    "name": "Vachier-Lagrave, Maxime",
+    "elo": 2740.0,
+    "initial_rank": 16
   },
   {
     "id": 3503240,
     "name": "Dominguez Perez, Leinier",
     "elo": 2738.0,
-    "initial_rank": 14
-  },
-  {
-    "id": 623539,
-    "name": "Vachier-Lagrave, Maxime",
-    "elo": 2734.8,
-    "initial_rank": 15
+    "initial_rank": 17
   },
   {
     "id": 8603677,
     "name": "Ding, Liren",
     "elo": 2734.0,
-    "initial_rank": 16
+    "initial_rank": 18
   },
   {
     "id": 4168119,
     "name": "Nepomniachtchi, Ian",
     "elo": 2732.0,
-    "initial_rank": 17
-  },
-  {
-    "id": 14204118,
-    "name": "Abdusattorov, Nodirbek",
-    "elo": 2731.6,
-    "initial_rank": 18
-  },
-  {
-    "id": 12401137,
-    "name": "Le, Quang Liem",
-    "elo": 2731.2,
     "initial_rank": 19
-  },
-  {
-    "id": 13401319,
-    "name": "Mamedyarov, Shakhriyar",
-    "elo": 2729.6,
-    "initial_rank": 20
-  },
-  {
-    "id": 13300474,
-    "name": "Aronian, Levon",
-    "elo": 2729.4,
-    "initial_rank": 21
   },
   {
     "id": 2093596,
     "name": "Niemann, Hans Moke",
     "elo": 2729.0,
-    "initial_rank": 22
+    "initial_rank": 20
   },
   {
     "id": 1170546,
     "name": "Duda, Jan-Krzysztof",
     "elo": 2729.0,
+    "initial_rank": 21
+  },
+  {
+    "id": 12401137,
+    "name": "Le, Quang Liem",
+    "elo": 2729.0,
+    "initial_rank": 22
+  },
+  {
+    "id": 13300474,
+    "name": "Aronian, Levon",
+    "elo": 2728.0,
     "initial_rank": 23
   },
   {
