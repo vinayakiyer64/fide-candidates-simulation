@@ -51,11 +51,12 @@ def main():
     # - 3 World Cup Spots
     # - 2 Grand Swiss Spots
     # - 2 FIDE Circuit Spots
+    # Priority Order: Grand Swiss > World Cup > FIDE Circuit > Rating
     config_current = QualificationConfig(
         num_rating_spots=1,
         tournament_configs=[
-            {"type": "world_cup", "spots": 3},
             {"type": "grand_swiss", "spots": 2},
+            {"type": "world_cup", "spots": 3},
             {"type": "fide_circuit", "spots": 2}
         ]
     )
@@ -71,8 +72,8 @@ def main():
     config_more_rating = QualificationConfig(
         num_rating_spots=3,
         tournament_configs=[
-            {"type": "world_cup", "spots": 1},
             {"type": "grand_swiss", "spots": 2},
+            {"type": "world_cup", "spots": 1},
             {"type": "fide_circuit", "spots": 2}
         ]
     )
@@ -82,8 +83,8 @@ def main():
     config_more_circuit = QualificationConfig(
         num_rating_spots=1,
         tournament_configs=[
-            {"type": "world_cup", "spots": 1},
             {"type": "grand_swiss", "spots": 2},
+            {"type": "world_cup", "spots": 1},
             {"type": "fide_circuit", "spots": 4}
         ]
     )
